@@ -1,0 +1,1680 @@
+PASTE_TEST_HELLO<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Skokovi u cilj — Tablica rezultata</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.17.1/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.17.1/firebase-firestore-compat.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@500;700&display=swap');
+
+:root{
+  --navy-900:#0B2138;
+  --navy-800:#132C46;
+  --navy-700:#1B3B5C;
+  --orange:#E8590C;
+  --orange-dark:#C24705;
+  --gold:#D4A017;
+  --paper:#F7F5EF;
+  --paper-dim:#EFEBE1;
+  --line:#C9C2B0;
+  --ink:#1B2430;
+  --ink-dim:#5B6472;
+  --good:#2F7A4F;
+  --good-bg:#E4F3EA;
+  --danger:#B23A2E;
+  --danger-bg:#FBE9E6;
+  --white:#FFFFFF;
+  --radius:10px;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.display{
+  font-family:'Oswald',sans-serif;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+  margin:0;
+}
+.mono{font-family:'Roboto Mono',monospace; font-variant-numeric:tabular-nums;}
+
+#app{max-width:1200px;margin:0 auto;padding:0 16px 60px;}
+@media (min-width:1300px){
+  #app{max-width:1480px;}
+}
+
+/* ---------- Header ---------- */
+.app-header{
+  background:linear-gradient(180deg,var(--navy-900),var(--navy-800));
+  color:var(--white);
+  margin:0 -16px 18px;
+  padding:18px 20px 16px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  border-bottom:4px solid var(--orange);
+}
+.target-logo{flex:0 0 auto;}
+.app-header .titles{flex:1 1 auto; min-width:0;}
+.app-header h1{font-size:22px; color:var(--white); line-height:1.15;}
+.app-header .sub{font-size:12.5px; color:#C9D6E4; text-transform:none; letter-spacing:0; margin-top:2px; font-family:'Inter',sans-serif;}
+.sync-pill{
+  font-size:11px; padding:4px 10px; border-radius:999px; white-space:nowrap;
+  background:rgba(255,255,255,.1); color:#DCE7F2; font-family:'Inter',sans-serif; text-transform:none;
+  border:1px solid rgba(255,255,255,.18);
+}
+.sync-pill.ok{background:rgba(47,122,79,.25); border-color:rgba(47,122,79,.5); color:#BFE9CE;}
+.sync-pill.err{background:rgba(178,58,46,.3); border-color:rgba(178,58,46,.6); color:#F7CFC9;}
+
+/* ---------- Tabs ---------- */
+.tabs{
+  display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;
+}
+.tab-btn{
+  font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.03em;
+  font-size:14px; font-weight:600; color:var(--ink-dim);
+  background:var(--white); border:2px solid var(--line); border-radius:999px;
+  padding:10px 18px; cursor:pointer; transition:all .15s ease;
+}
+.tab-btn:hover{border-color:var(--navy-700); color:var(--navy-800);}
+.tab-btn.active{background:var(--navy-800); border-color:var(--navy-800); color:var(--white);}
+
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* ---------- Cards / sections ---------- */
+.card{
+  background:var(--white); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; margin-bottom:18px;
+}
+.card h2{font-size:17px; color:var(--navy-800); margin-bottom:14px; display:flex; align-items:center; gap:8px;}
+.card h2 .ring-dot{width:10px; height:10px; border-radius:50%; background:var(--orange); display:inline-block;}
+.card .hint{font-size:12.5px; color:var(--ink-dim); margin-top:-8px; margin-bottom:14px; font-family:'Inter';}
+
+.row{display:flex; gap:14px; flex-wrap:wrap;}
+.field{display:flex; flex-direction:column; gap:5px; margin-bottom:12px;}
+.field label{font-size:12px; font-weight:600; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.03em;}
+.field input[type=text], .field input[type=number], .field select{
+  border:1.5px solid var(--line); border-radius:7px; padding:10px 12px; font-size:15px;
+  font-family:'Inter'; background:var(--white); color:var(--ink); min-width:0;
+}
+.field input:focus, .field select:focus{outline:2px solid var(--orange); outline-offset:1px; border-color:var(--orange);}
+.field.small{max-width:140px;}
+.field.grow{flex:1 1 220px;}
+
+#rulesTextarea{
+  width:100%; min-height:420px; resize:vertical; border:1.5px solid var(--line); border-radius:7px;
+  padding:14px 16px; font-size:15px; line-height:1.6; font-family:'Inter'; color:var(--ink); background:var(--white);
+}
+#rulesTextarea:focus{outline:2px solid var(--orange); outline-offset:1px; border-color:var(--orange);}
+.rules-print-text{white-space:pre-wrap; font-family:'Inter'; font-size:13.5px; line-height:1.7; color:var(--ink);}
+
+button.btn{
+  font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.03em; font-weight:600;
+  font-size:13.5px; border-radius:7px; border:none; padding:11px 20px; cursor:pointer;
+  background:var(--orange); color:var(--white); transition:background .15s ease;
+}
+button.btn:hover{background:var(--orange-dark);}
+button.btn.secondary{background:var(--white); color:var(--navy-800); border:1.5px solid var(--line);}
+button.btn.secondary:hover{border-color:var(--navy-700);}
+button.btn.danger{background:var(--danger);}
+button.btn.danger:hover{background:#8f2e24;}
+button.btn:disabled{opacity:.45; cursor:not-allowed;}
+button.btn-icon{
+  border:1.5px solid var(--line); background:var(--white); border-radius:7px; padding:7px 12px; cursor:pointer; font-size:13px; font-family:'Inter'; font-weight:600; color:var(--navy-800);
+}
+button.btn-icon:hover{border-color:var(--navy-700);}
+button.btn-icon.danger{color:var(--danger); border-color:#E7C3BD;}
+
+/* Team member inputs grid */
+.members-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:8px;}
+.member-slot label{display:flex; align-items:center; gap:6px;}
+.member-alkarski-label{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-dim); margin-top:5px; cursor:pointer;}
+.member-alkarski-label input{width:14px; height:14px;}
+.letter-badge{
+  display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%;
+  background:var(--navy-800); color:var(--white); font-family:'Roboto Mono'; font-size:11px; font-weight:700;
+}
+
+/* Team list cards */
+.team-card{
+  border:1.5px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-bottom:10px;
+  display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+}
+.team-card .info{flex:1 1 320px; min-width:0;}
+.team-card .team-name{font-family:'Oswald'; font-size:15.5px; color:var(--navy-800); text-transform:uppercase;}
+.team-card .team-name .num{color:var(--orange); font-family:'Roboto Mono';}
+.team-card .members{font-size:13px; color:var(--ink-dim); margin-top:4px; display:flex; gap:8px; flex-wrap:wrap;}
+.chip{
+  background:var(--paper-dim); border-radius:6px; padding:3px 8px; font-size:12px; font-family:'Roboto Mono';
+}
+.chip.missing{background:var(--danger-bg); color:var(--danger);}
+.team-card .actions{display:flex; gap:8px;}
+
+/* ---------- Results grid ---------- */
+.results-table-wrap{overflow-x:auto;}
+table.results-table{border-collapse:collapse; width:100%; min-width:640px;}
+table.results-table th, table.results-table td{
+  border:1px solid var(--line); padding:6px 7px; text-align:center; font-size:13px;
+}
+table.results-table thead th{
+  background:var(--navy-800); color:var(--white); font-family:'Oswald'; text-transform:uppercase; font-size:12px; letter-spacing:.02em;
+}
+table.results-table td.competitor-name{
+  text-align:left; font-family:'Inter'; font-weight:600; background:var(--paper-dim); white-space:nowrap; min-width:150px;
+}
+table.results-table td.row-label{
+  font-size:10.5px; color:var(--ink-dim); text-transform:uppercase; background:var(--paper-dim); font-weight:700; white-space:nowrap;
+}
+table.results-table input[type=number]{
+  width:56px; border:1px solid var(--line); border-radius:5px; padding:5px 3px; text-align:center; font-family:'Roboto Mono'; font-size:13px;
+}
+table.results-table input[disabled]{background:var(--paper-dim); color:var(--ink-dim);}
+table.results-table input.input-corrected{border-color:var(--danger); background:var(--danger-bg);}
+table.results-table td.sum-cell{font-family:'Roboto Mono'; font-weight:700; background:#FBF6EC;}
+tr.missing-row td{opacity:.75;}
+tr.missing-row td.competitor-name::after{
+  content:" — prazno mjesto"; font-weight:400; font-style:italic; color:var(--danger); font-size:11px;
+}
+.autosave-note{font-size:12px; color:var(--ink-dim); margin-top:10px; display:flex; align-items:center; gap:6px;}
+
+/* ---------- Ranking table ---------- */
+table.rank-table{border-collapse:collapse; width:100%;}
+table.rank-table th, table.rank-table td{border:1px solid var(--line); padding:9px 10px; font-size:14px;}
+table.rank-table thead th{
+  background:var(--navy-800); color:var(--white); font-family:'Oswald'; text-transform:uppercase; font-size:12.5px; text-align:left;
+}
+table.rank-table td.place{font-family:'Roboto Mono'; font-weight:700; text-align:center; width:50px;}
+table.rank-table td.num{font-family:'Roboto Mono'; text-align:center; width:60px;}
+table.rank-table td.result-cell{font-family:'Roboto Mono'; text-align:center; width:130px; line-height:1.35;}
+table.rank-table td.result-cell .pts-big{font-size:17px; font-weight:700; color:var(--navy-800);}
+table.rank-table td.result-cell .pts-unit{font-size:11px; color:var(--ink-dim); font-family:'Inter'; text-transform:uppercase; margin-left:2px;}
+table.rank-table td.result-cell .cm-line{display:block; font-size:12.5px; color:var(--ink-dim); margin-top:2px;}
+table.rank-table tr:nth-child(1) td.place{color:var(--gold); font-size:16px;}
+table.rank-table tr:nth-child(2) td.place{color:#8A97A6; font-size:15.5px;}
+table.rank-table tr:nth-child(3) td.place{color:#B4732E; font-size:15px;}
+table.rank-table tbody tr:hover{background:var(--paper-dim);}
+table.rank-table td.progress{font-family:'Roboto Mono'; text-align:center; width:70px; font-size:12.5px; color:var(--ink-dim);}
+table.rank-table td.progress.full{color:var(--good); font-weight:700;}
+table.rank-table td.jump-cell{font-family:'Roboto Mono'; text-align:center; width:52px; font-size:11.5px; line-height:1.4; padding:6px 4px; color:var(--ink-dim); border-left:1px dashed var(--line);}
+table.rank-table td.jump-cell .jp{font-weight:700; color:var(--ink);}
+table.rank-table td.jump-cell .jc{display:block; font-size:10px;}
+table.rank-table td.jump-cell.empty{color:#C9C2B0;}
+table.rank-table th.jump-head{font-size:10.5px !important; text-align:center !important; border-left:1px dashed rgba(255,255,255,.25);}
+.rank-table-wrap{overflow-x:auto;}
+.incomplete-banner{
+  background:#FFF4E0; border:1px solid #E9C77B; color:#8A5A00; padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:14px;
+}
+table.team-rank-table{border-collapse:collapse; width:100%; margin-top:10px;}
+table.team-rank-table th, table.team-rank-table td{border:1px solid var(--line); padding:9px 10px; font-size:14px;}
+table.team-rank-table thead th{background:var(--navy-700); color:var(--white); font-family:'Oswald'; text-transform:uppercase; font-size:12.5px; text-align:left;}
+table.team-rank-table td.place{font-family:'Roboto Mono'; font-weight:700; text-align:center; width:50px;}
+table.team-rank-table td.num{font-family:'Roboto Mono'; text-align:center; width:60px;}
+.section-subtitle{font-family:'Oswald'; text-transform:uppercase; font-size:14px; color:var(--navy-800); margin:22px 0 8px;}
+
+/* ---------- Print reports ---------- */
+.print-controls{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px;}
+.report-preview{background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:24px;}
+.report-title{text-align:center; margin-bottom:4px;}
+.report-title h2{font-size:19px; color:var(--navy-800);}
+.report-title .meta{text-align:center; font-size:12px; color:var(--ink-dim); margin-bottom:18px; font-family:'Inter';}
+
+table.sheet-table{border-collapse:collapse; width:100%; margin-bottom:26px; page-break-inside:avoid;}
+table.sheet-table th, table.sheet-table td{border:1px solid #333; padding:5px 6px; font-size:11.5px; text-align:center;}
+table.sheet-table thead th{background:#EFEBE1; font-family:'Oswald'; text-transform:uppercase; font-size:10.5px;}
+table.sheet-table td.name-cell{text-align:left; font-weight:600; white-space:nowrap;}
+table.sheet-table .sig-row td{height:34px; font-size:9.5px; color:#555; vertical-align:bottom;}
+table.sheet-table td.small-label{font-size:9px; color:#666; text-transform:uppercase;}
+.team-block-title{font-family:'Oswald'; text-transform:uppercase; font-size:14px; color:var(--navy-800); margin:22px 0 8px; border-bottom:2px solid var(--orange); padding-bottom:4px;}
+.team-block-title:first-child{margin-top:0;}
+
+table.indiv-table{border-collapse:collapse; width:100%; margin-bottom:22px; page-break-inside:avoid;}
+table.indiv-table th, table.indiv-table td{border:1px solid #333; padding:6px 8px; font-size:12px;}
+table.indiv-table thead th{background:#132C46; color:#fff; font-family:'Oswald'; text-transform:uppercase; font-size:11px; text-align:left;}
+table.indiv-table td.jump-col{font-family:'Roboto Mono'; font-weight:700; text-align:center; width:60px;}
+table.indiv-table td.score-cell{font-family:'Roboto Mono'; text-align:center; line-height:1.5;}
+table.indiv-table td.score-cell .pts{font-weight:700;}
+table.indiv-table td.score-cell .cm{color:#555; font-size:11px;}
+table.indiv-table td.rowspan-cell{vertical-align:middle; font-weight:600;}
+
+.empty-state{text-align:center; padding:40px 20px; color:var(--ink-dim);}
+.empty-state .big-ring{margin-bottom:10px;}
+
+/* ---------- Print media ---------- */
+@media print{
+  body{background:#fff;}
+  .no-print{display:none !important;}
+  #app{max-width:100%; padding:0; margin:0;}
+  .card, .report-preview{border:none; padding:0; box-shadow:none;}
+  .tabs{display:none;}
+  table.sheet-table, table.indiv-table, table.rank-table{page-break-inside:auto;}
+  tr{page-break-inside:avoid;}
+}
+body.spectator-mode #mainTabs{display:none;}
+body.spectator-mode .tab-content{display:none !important;}
+body.spectator-mode #tab-rang{display:block !important;}
+body.spectator-mode #publicLinkCard{display:none !important;}
+.live-badge{
+  display:inline-flex; align-items:center; gap:5px; font-size:11px; font-family:'Inter'; font-weight:700;
+  color:#BFE9CE; text-transform:uppercase; letter-spacing:.04em;
+}
+.live-badge .dot{width:7px; height:7px; border-radius:50%; background:#3DDC84; animation:pulse-dot 1.6s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;} 50%{opacity:.3;}}
+.archive-banner{
+  background:#FFF4E0; border-bottom:3px solid var(--gold); color:#7A5300; padding:10px 20px; margin:0 -16px 18px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px; font-family:'Inter'; font-weight:600; font-size:13.5px;
+}
+body.archive-mode #tab-ekipe input, body.archive-mode #tab-ekipe select, body.archive-mode #tab-ekipe button.btn,
+body.archive-mode #tab-ekipe button.btn-icon,
+body.archive-mode #tab-rezultati input,
+body.archive-mode #tab-pravila textarea{
+  pointer-events:none; opacity:.6;
+}
+.archive-list{margin-top:10px;}
+.archive-item{
+  display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border:1px solid var(--line); border-radius:8px; margin-bottom:8px;
+}
+.archive-item .info{font-size:14px;}
+.archive-item .info .ed{font-family:'Roboto Mono'; font-weight:700; color:var(--navy-800); margin-right:8px;}
+@media (max-width:640px){
+  .app-header h1{font-size:18px;}
+  .tab-btn{font-size:12.5px; padding:8px 14px;}
+  table.results-table input[type=number]{width:44px;}
+}
+@media (min-width:1150px){
+  .ekipe-columns{display:grid; grid-template-columns:minmax(360px,480px) 1fr; gap:20px; align-items:start;}
+  .ekipe-columns .card{margin-bottom:0;}
+  .ekipe-columns .card.list-card{position:sticky; top:16px; max-height:calc(100vh - 32px); overflow-y:auto;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="app-header">
+    <div class="target-logo">
+      <svg width="60" height="46" viewBox="0 0 64 48">
+        <rect x="2" y="2" width="8" height="8" fill="#E8590C"/>
+        <rect x="10" y="2" width="8" height="8" fill="#F7F5EF"/>
+        <rect x="2" y="10" width="8" height="8" fill="#F7F5EF"/>
+        <rect x="10" y="10" width="8" height="8" fill="#E8590C"/>
+        <circle cx="44" cy="24" r="20" fill="#0B2138"/>
+        <circle cx="44" cy="24" r="20" fill="none" stroke="#E8590C" stroke-width="1.5"/>
+        <circle cx="44" cy="24" r="14" fill="none" stroke="#F7F5EF" stroke-width="1.5"/>
+        <circle cx="44" cy="24" r="8" fill="none" stroke="#E8590C" stroke-width="1.5"/>
+        <circle cx="44" cy="24" r="3" fill="#D4A017"/>
+      </svg>
+    </div>
+    <div class="titles">
+      <h1 id="headerTitle">Skokovi u cilj — natjecateljski rezultati</h1>
+      <div class="sub" id="headerSub">Ekipe, unos rezultata i rang lista</div>
+      <div class="sub" id="buildTag" style="opacity:.6; font-size:10px;"></div>
+    </div>
+    <div class="sync-pill" id="syncPill">Učitavanje…</div>
+  </div>
+
+  <div class="archive-banner no-print" id="archiveBanner" style="display:none;">
+    <span id="archiveBannerText">Pregled arhive — samo za čitanje</span>
+    <button class="btn secondary" id="exitArchiveBtn">Natrag na tekuće natjecanje</button>
+  </div>
+
+  <div class="tabs no-print" id="mainTabs">
+    <button class="tab-btn active" data-tab="ekipe">Ekipe i postavke</button>
+    <button class="tab-btn" data-tab="rezultati">Unos rezultata</button>
+    <button class="tab-btn" data-tab="rang">Rang lista</button>
+    <button class="tab-btn" data-tab="pravila">Pravila natjecanja</button>
+    <button class="tab-btn" data-tab="ispis">Ispis / Print</button>
+  </div>
+
+  <!-- ================= EKIPE TAB ================= -->
+  <div class="tab-content active" id="tab-ekipe">
+
+    <div class="card">
+      <h2><span class="ring-dot"></span>Postavke natjecanja</h2>
+      <div class="row">
+        <div class="field small" style="max-width:100px;">
+          <label>Redni broj</label>
+          <input type="text" id="eventEditionInput" placeholder="npr. 36." maxlength="6">
+        </div>
+        <div class="field grow">
+          <label>Naziv natjecanja</label>
+          <input type="text" id="eventNameInput" placeholder="npr. Alkarski padobranski kup">
+        </div>
+      </div>
+      <div class="hint">Ovaj naziv i redni broj prikazuju se u zaglavlju aplikacije i na ispisima. Redni broj se svake godine mijenja.</div>
+      <div class="row" style="margin-top:14px;">
+        <div class="field small">
+          <label>Broj serija skokova</label>
+          <select id="numJumpsSelect">
+            <option value="5">5 skokova</option>
+            <option value="9">9 skokova</option>
+            <option value="custom">Drugo…</option>
+          </select>
+        </div>
+        <div class="field small" id="customJumpsField" style="display:none;">
+          <label>Unesi broj</label>
+          <input type="number" id="customJumpsInput" min="1" max="20">
+        </div>
+      </div>
+      <div class="hint">Ako smanjite broj skokova, rezultati za skokove iznad novog broja bit će trajno obrisani. Kod 9 skokova, rang lista automatski nudi i podjelu na Bara (I–III) / Čoja (IV–VI) / Alka (VII–IX).</div>
+    </div>
+
+    <div class="card no-print">
+      <h2><span class="ring-dot"></span>Arhiva prošlih natjecanja</h2>
+      <div class="hint">Svako izdanje (redni broj) sprema se trajno i odvojeno. Ovdje možete pogledati stara izdanja u načinu samo za čitanje, bez rizika da nešto promijenite.</div>
+      <button class="btn secondary" id="loadArchiveBtn">Prikaži arhivu</button>
+      <div class="archive-list" id="archiveList"></div>
+    </div>
+
+    <div class="ekipe-columns">
+      <div class="card">
+        <h2><span class="ring-dot"></span>Dodaj / uredi ekipu</h2>
+        <div class="hint">Ekipa uvijek ima 5 mjesta (A–E). Ostavite ime praznim ako natjecatelj fali — automatski dobiva 0 punata i 16 cm u svakom skoku.</div>
+        <input type="hidden" id="editingTeamId" value="">
+        <div class="row">
+          <div class="field small">
+            <label>Broj ekipe</label>
+            <input type="number" id="teamNumber" min="1">
+          </div>
+          <div class="field grow">
+            <label>Naziv ekipe / Klub</label>
+            <input type="text" id="teamName" placeholder="npr. AK Sinj">
+          </div>
+        </div>
+        <div class="hint" id="teamAlkarskiHint">Kod svakog natjecatelja označite sudjeluje li u Bara/Čoja/Alka poretku — u ukupnom poretku svi natjecatelji sudjeluju bez obzira na ovu oznaku.</div>
+        <div class="members-grid" id="membersGrid"></div>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="saveTeamBtn">Spremi ekipu</button>
+          <button class="btn secondary" id="cancelEditBtn" style="display:none;">Odustani od uređivanja</button>
+        </div>
+      </div>
+
+      <div class="card list-card">
+        <h2><span class="ring-dot"></span>Popis ekipa</h2>
+        <div id="teamsList"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= REZULTATI TAB ================= -->
+  <div class="tab-content" id="tab-rezultati">
+    <div class="card">
+      <h2><span class="ring-dot"></span>Unos rezultata po ekipi</h2>
+      <div class="hint">Dozvoljene vrijednosti — Punti: 0, 1, 2 ili 3. Centimetri: cijeli broj od 0 do 16. Ostale vrijednosti se automatski ispravljaju na najbliži dozvoljeni broj. Ako su punti 0, 1 ili 2, centimetri se automatski postavljaju na 16 (mjeri se samo kad je pogodak vrijedan 3 punta).</div>
+      <div class="row">
+        <div class="field grow">
+          <label>Odaberi ekipu</label>
+          <select id="teamSelectForResults"></select>
+        </div>
+      </div>
+      <div id="resultsGridWrap"></div>
+      <div class="autosave-note" id="autosaveNote"></div>
+    </div>
+  </div>
+
+  <!-- ================= RANG LISTA TAB ================= -->
+  <div class="tab-content" id="tab-rang">
+    <div class="card no-print" id="publicLinkCard">
+      <h2><span class="ring-dot"></span>Javni pregled za natjecatelje</h2>
+      <div class="hint">Podijelite ovu poveznicu s natjecateljima i gledateljima — otvara samo rang listu, bez mogućnosti uređivanja, i osvježava se sama.</div>
+      <div class="row" style="align-items:flex-end;">
+        <div class="field grow">
+          <label>Poveznica za pregled</label>
+          <input type="text" id="publicLinkInput" readonly>
+        </div>
+        <button class="btn secondary" id="copyPublicLinkBtn">Kopiraj</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span class="ring-dot"></span>Rang lista</h2>
+      <div class="hint">Poredak: veći broj punata bolji → manji broj centimetara bolji → bolji niz pogodaka (tko ima više nula, jedinica…).</div>
+      <div class="row" id="rangRoundRow" style="display:none;">
+        <div class="field small">
+          <label>Naslov</label>
+          <select id="rangRoundSelect">
+            <option value="ukupno">Ukupno</option>
+            <option value="bara">Bara (I–III)</option>
+            <option value="coja">Čoja (IV–VI)</option>
+            <option value="alka">Alka (VII–IX)</option>
+          </select>
+        </div>
+      </div>
+      <div id="rangContent"></div>
+    </div>
+  </div>
+
+  <!-- ================= PRAVILA TAB ================= -->
+  <div class="tab-content" id="tab-pravila">
+    <div class="card">
+      <h2><span class="ring-dot"></span>Pravila natjecanja</h2>
+      <div class="hint">Slobodan unos teksta — pravila, propozicije, napomene za suce ili natjecatelje. Sprema se automatski i može se ispisati (tab "Ispis / Print").</div>
+      <textarea id="rulesTextarea" placeholder="Ovdje upišite pravila natjecanja..."></textarea>
+      <div class="autosave-note" id="rulesAutosaveNote">Tekst se automatski sprema dok pišete.</div>
+    </div>
+  </div>
+
+  <!-- ================= ISPIS TAB ================= -->
+  <div class="tab-content" id="tab-ispis">
+    <div class="print-controls no-print">
+      <div class="field small" style="margin-bottom:0;">
+        <label>Vrsta ispisa</label>
+        <select id="reportTypeSelect">
+          <option value="rang">Rang lista</option>
+          <option value="radni">Radni listovi po ekipama (za teren)</option>
+          <option value="pojedinacni">Pojedinačni bodovni obrasci</option>
+          <option value="pravila">Pravila natjecanja</option>
+        </select>
+      </div>
+      <div class="field small" id="rangPrintRoundField" style="display:none; margin-bottom:0;">
+        <label>Naslov</label>
+        <select id="rangPrintRound">
+          <option value="ukupno">Ukupno</option>
+          <option value="bara">Bara (I–III)</option>
+          <option value="coja">Čoja (IV–VI)</option>
+          <option value="alka">Alka (VII–IX)</option>
+        </select>
+      </div>
+      <button class="btn" id="printBtn">🖨 Ispiši</button>
+    </div>
+    <div class="report-preview" id="reportPreview"></div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const APP_BUILD = 'debug-build-17';
+  console.log('[skokovi-u-cilj] Verzija koda:', APP_BUILD);
+  document.addEventListener('DOMContentLoaded', function(){
+    const tag = document.getElementById('buildTag');
+    if(tag) tag.textContent = 'build: ' + APP_BUILD;
+  });
+  if(document.getElementById('buildTag')) document.getElementById('buildTag').textContent = 'build: ' + APP_BUILD;
+  window.addEventListener('error', function(e){
+    if(document.getElementById('fatalErrorBannerShown')) return; // show only once, never spam
+    const banner = document.createElement('div');
+    banner.id = 'fatalErrorBannerShown';
+    banner.style.cssText = 'max-width:640px; margin:20px auto; padding:18px 22px; border:2px solid #C0392B; border-radius:10px; font-family:Inter,sans-serif; background:#FBE9E6; color:#7A1F17; white-space:pre-wrap; font-size:13px; position:relative; z-index:9999;';
+    banner.innerHTML = '<strong style="font-family:Oswald,sans-serif; font-size:15px; display:block; margin-bottom:8px;">Neuhvaćena greška</strong>'+
+      String(e.message||e).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))+
+      (e.filename ? '<br><span style="font-size:11px; opacity:.75;">'+e.filename+':'+e.lineno+':'+e.colno+'</span>' : '');
+    const app = document.getElementById('app');
+    if(app) app.prepend(banner); else document.body.prepend(banner);
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    if(document.getElementById('fatalErrorBannerShown')) return; // show only once, never spam
+    const banner = document.createElement('div');
+    banner.id = 'fatalErrorBannerShown';
+    banner.style.cssText = 'max-width:640px; margin:20px auto; padding:18px 22px; border:2px solid #C0392B; border-radius:10px; font-family:Inter,sans-serif; background:#FBE9E6; color:#7A1F17; white-space:pre-wrap; font-size:13px; position:relative; z-index:9999;';
+    const msg = e.reason && e.reason.message ? e.reason.message : String(e.reason);
+    banner.innerHTML = '<strong style="font-family:Oswald,sans-serif; font-size:15px; display:block; margin-bottom:8px;">Neuhvaćena Promise greška</strong>'+
+      String(msg).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    const app = document.getElementById('app');
+    if(app) app.prepend(banner); else document.body.prepend(banner);
+  });
+  if(typeof firebase === 'undefined'){
+    document.getElementById('app').innerHTML =
+      '<div style="max-width:520px; margin:60px auto; padding:24px; border:2px solid #E8590C; border-radius:10px; font-family:Inter,sans-serif; background:#FFF4E0;">'+
+      '<h2 style="font-family:Oswald,sans-serif; color:#8A5300; margin-top:0;">Nije moguće učitati bazu podataka</h2>'+
+      '<p>Skripta za povezivanje s Firebase bazom nije se učitala (blokirana veza ili nema interneta). Provjerite internetsku vezu i osvježite stranicu. Ako se ovo ponavlja, pokušajte otvoriti datoteku u drugom pregledniku.</p>'+
+      '</div>';
+    return;
+  }
+  const LETTERS = ['A','B','C','D','E'];
+  const SPECTATOR_MODE = new URLSearchParams(window.location.search).get('public') === '1';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAW8MABj16yzqaLEI2Xof3o4NulA2KfGCU",
+    authDomain: "skydiveapp-97a86.firebaseapp.com",
+    projectId: "skydiveapp-97a86",
+    storageBucket: "skydiveapp-97a86.firebasestorage.app",
+    messagingSenderId: "346859857012",
+    appId: "1:346859857012:web:a7f636bbaa00d4103c9d21",
+    measurementId: "G-G4YHF7CGF9"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+  const COLLECTION = 'natjecanja';
+  const META_DOC_ID = '_meta';
+
+  let data = null;
+  let saveTimer = null;
+  let hasUnsavedChanges = false;
+  let currentEditionKey = null;
+  let unsubscribeListener = null;
+  let archiveMode = false;
+
+  function competitorId(teamNumber, letter){ return teamNumber + '-' + letter; }
+
+  function isMissing(comp){ return !comp || !comp.ime || !comp.ime.trim(); }
+
+  function emptyResultRow(){ return { points:null, cm:null, cmAuto:false }; }
+
+  function ensureResultsForCompetitor(id, missing, numJumps){
+    let arr = data.results[id];
+    if(!arr){ arr = []; }
+    // resize
+    if(arr.length < numJumps){
+      for(let i=arr.length;i<numJumps;i++) arr.push(emptyResultRow());
+    } else if(arr.length > numJumps){
+      arr = arr.slice(0, numJumps);
+    }
+    if(missing){
+      arr = arr.map(()=>({points:0, cm:16, cmAuto:true}));
+    } else {
+      arr = arr.map(r=>{
+        const row = { points: (r.points===undefined?null:r.points), cm: (r.cm===undefined?null:r.cm), cmAuto: !!r.cmAuto };
+        if(row.points===0 || row.points===1 || row.points===2){
+          row.cm = 16; row.cmAuto = true;
+        }
+        return row;
+      });
+    }
+    data.results[id] = arr;
+    return arr;
+  }
+
+  function syncAllResultsShape(){
+    const n = data.config.numJumps;
+    data.teams.forEach(team=>{
+      team.competitors.forEach(comp=>{
+        const id = competitorId(team.number, comp.letter);
+        ensureResultsForCompetitor(id, isMissing(comp), n);
+      });
+    });
+  }
+
+  // ---------------- Storage (Firestore, keyed by edition) ----------------
+  function setSyncPill(state, text){
+    const pill = document.getElementById('syncPill');
+    pill.className = 'sync-pill' + (state ? ' '+state : '');
+    pill.textContent = text;
+  }
+
+  function sanitizeEditionKey(str){
+    const cleaned = (str||'').trim().replace(/[^a-zA-Z0-9-_.]+/g, '-').replace(/^.+$/,'');
+    return cleaned || 'default';
+  }
+
+  function normalizeData(d){
+    if(!d.config) d.config = {};
+    if(d.config.numJumps === undefined) d.config.numJumps = 9;
+    if(d.config.eventName === undefined) d.config.eventName = 'Skokovi u cilj';
+    if(d.config.eventEdition === undefined) d.config.eventEdition = '';
+    if(!d.teams) d.teams = [];
+    if(!d.results) d.results = {};
+    if(d.rules === undefined) d.rules = '';
+    return d;
+  }
+
+  async function getMetaPointer(){
+    try{
+      const snap = await db.collection(COLLECTION).doc(META_DOC_ID).get();
+      return snap.exists ? snap.data().currentEdition : null;
+    } catch(e){ return null; }
+  }
+
+  async function setMetaPointer(editionKey){
+    try{
+      await db.collection(COLLECTION).doc(META_DOC_ID).set({ currentEdition: editionKey });
+    } catch(e){ /* non-fatal */ }
+  }
+
+  function detachListener(){
+    if(unsubscribeListener){ unsubscribeListener(); unsubscribeListener = null; }
+  }
+
+  function attachListener(editionKey){
+    detachListener();
+    unsubscribeListener = db.collection(COLLECTION).doc(editionKey).onSnapshot(snapshot=>{
+      if(snapshot.metadata.hasPendingWrites) return; // ignore echo of our own writes
+      if(archiveMode) return; // browsing an old edition — don't let live edition overwrite the view
+      if(hasUnsavedChanges || saveTimer) return; // never clobber unsaved local edits
+      const active = document.activeElement;
+      if(active && (active.tagName==='INPUT' || active.tagName==='SELECT' || active.tagName==='TEXTAREA')) return;
+      if(!snapshot.exists) return;
+      data = normalizeData(snapshot.data());
+      syncAllResultsShape();
+      fullRerenderAfterRemoteUpdate();
+      setSyncPill('ok', 'Ažurirano s drugog uređaja');
+    }, err=>{
+      setSyncPill('err', 'Greška veze s bazom — provjerite internet');
+    });
+  }
+
+  function withTimeout(promise, ms, label){
+    let timer;
+    const timeout = new Promise((_, reject)=>{
+      timer = setTimeout(()=> reject(new Error('Vrijeme isteklo: '+label)), ms);
+    });
+    return Promise.race([promise, timeout]).finally(()=> clearTimeout(timer));
+  }
+
+  async function loadData(){
+    setSyncPill('', 'Učitavanje…');
+    try{
+      let editionKey = await withTimeout(getMetaPointer(), 7000, 'čitanje pokazivača');
+      let snap;
+      if(editionKey){
+        snap = await withTimeout(db.collection(COLLECTION).doc(editionKey).get(), 7000, 'čitanje izdanja');
+      }
+      if(!editionKey || !snap || !snap.exists){
+        // first run ever — create an initial edition document
+        data = normalizeData({});
+        editionKey = sanitizeEditionKey(data.config.eventEdition);
+        await withTimeout(db.collection(COLLECTION).doc(editionKey).set(data), 7000, 'stvaranje izdanja');
+        await withTimeout(setMetaPointer(editionKey), 7000, 'spremanje pokazivača');
+      } else {
+        data = normalizeData(snap.data());
+      }
+      currentEditionKey = editionKey;
+      syncAllResultsShape();
+      attachListener(currentEditionKey);
+      setSyncPill('ok', 'Povezano s bazom podataka');
+    } catch(e){
+      console.error('[skokovi-u-cilj] loadData error/timeout:', e);
+      data = normalizeData({});
+      currentEditionKey = sanitizeEditionKey('');
+      setSyncPill('err', 'Nema veze s bazom — radite lokalno dok se veza ne uspostavi');
+    }
+  }
+
+  async function saveData(){
+    if(archiveMode) return; // never write while viewing an archived edition
+    try{
+      await db.collection(COLLECTION).doc(currentEditionKey).set(data);
+      hasUnsavedChanges = false;
+      setSyncPill('ok', 'Spremljeno u bazu podataka');
+    } catch(e){
+      setSyncPill('err', 'Nije spremljeno — provjerite internetsku vezu');
+    }
+  }
+
+  function saveDataDebounced(delay){
+    if(archiveMode) return;
+    hasUnsavedChanges = true;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=>{ saveTimer = null; saveData(); }, delay||600);
+  }
+
+  function fullRerenderAfterRemoteUpdate(){
+    renderHeaderTitle();
+    renderTeamsList();
+    populateTeamSelect();
+    const eventNameInput = document.getElementById('eventNameInput');
+    const eventEditionInput = document.getElementById('eventEditionInput');
+    if(eventNameInput) eventNameInput.value = data.config.eventName || '';
+    if(eventEditionInput) eventEditionInput.value = data.config.eventEdition || '';
+    const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+    if(activeTab==='rezultati') renderResultsGrid();
+    if(activeTab==='rang') renderRangTab();
+    if(activeTab==='pravila') renderPravilaTab();
+    if(activeTab==='ispis') renderIspisTab();
+  }
+
+  // ---------------- Edition switching (new competition = new archived document) ----------------
+  async function switchToNewEdition(newEditionLabel){
+    const newKey = sanitizeEditionKey(newEditionLabel);
+    if(newKey === currentEditionKey) return;
+    const existing = await db.collection(COLLECTION).doc(newKey).get();
+    if(existing.exists){
+      const ok = confirm('Izdanje "'+newEditionLabel+'" već postoji u arhivi. Otvoriti ga (nastaviti raditi na njemu)?');
+      if(!ok){
+        document.getElementById('eventEditionInput').value = data.config.eventEdition || '';
+        return;
+      }
+      detachListener();
+      data = normalizeData(existing.data());
+      currentEditionKey = newKey;
+      syncAllResultsShape();
+      await setMetaPointer(currentEditionKey);
+      attachListener(currentEditionKey);
+      fullRerenderAfterRemoteUpdate();
+      renderTeamsList(); renderResultsTab(); renderRangTab();
+      return;
+    }
+    const ok = confirm('Prelazite na novo izdanje "'+newEditionLabel+'". Trenutno izdanje ("'+(data.config.eventEdition||'bez broja')+'") ostaje trajno spremljeno u arhivi. Započeti novo, prazno natjecanje?');
+    if(!ok){
+      document.getElementById('eventEditionInput').value = data.config.eventEdition || '';
+      return;
+    }
+    detachListener();
+    const preservedName = data.config.eventName;
+    const preservedNumJumps = data.config.numJumps;
+    data = normalizeData({});
+    data.config.eventName = preservedName;
+    data.config.numJumps = preservedNumJumps;
+    data.config.eventEdition = newEditionLabel;
+    currentEditionKey = newKey;
+    await db.collection(COLLECTION).doc(currentEditionKey).set(data);
+    await setMetaPointer(currentEditionKey);
+    attachListener(currentEditionKey);
+    fullRerenderAfterRemoteUpdate();
+    resetTeamForm(); renderTeamsList(); renderResultsTab(); renderRangTab();
+  }
+
+  // ---------------- Archive browsing (read-only) ----------------
+  async function listArchivedEditions(){
+    const snap = await db.collection(COLLECTION).get();
+    const list = [];
+    snap.forEach(doc=>{
+      if(doc.id === META_DOC_ID) return;
+      const d = doc.data();
+      list.push({ key: doc.id, edition: (d.config && d.config.eventEdition) || doc.id, name: (d.config && d.config.eventName) || '' });
+    });
+    list.sort((a,b)=> a.key < b.key ? 1 : -1);
+    return list;
+  }
+
+  async function openArchivedEdition(key){
+    detachListener();
+    const snap = await db.collection(COLLECTION).doc(key).get();
+    if(!snap.exists){ alert('Izdanje nije pronađeno.'); return; }
+    archiveMode = true;
+    data = normalizeData(snap.data());
+    syncAllResultsShape();
+    document.body.classList.add('archive-mode');
+    document.getElementById('archiveBanner').style.display = '';
+    document.getElementById('archiveBannerText').textContent = 'Pregled arhive: ' + eventTitleText() + ' — samo za čitanje';
+    fullRerenderAfterRemoteUpdate();
+    renderTeamsList(); renderResultsTab(); renderRangTab();
+  }
+
+  async function exitArchiveMode(){
+    archiveMode = false;
+    document.body.classList.remove('archive-mode');
+    document.getElementById('archiveBanner').style.display = 'none';
+    await loadData();
+    fullRerenderAfterRemoteUpdate();
+    resetTeamForm(); renderTeamsList(); renderResultsTab(); renderRangTab();
+  }
+
+  // ---------------- Tabs ----------------
+  function initTabs(){
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+        if(btn.dataset.tab === 'rezultati') renderResultsTab();
+        if(btn.dataset.tab === 'rang') renderRangTab();
+        if(btn.dataset.tab === 'pravila') renderPravilaTab();
+        if(btn.dataset.tab === 'ispis') renderIspisTab();
+      });
+    });
+  }
+
+  // ---------------- Postavke (numJumps) ----------------
+  function renderHeaderTitle(){
+    const nameEl = document.getElementById('headerTitle');
+    const name = (data.config.eventName || '').trim() || 'Skokovi u cilj';
+    const edition = (data.config.eventEdition || '').trim();
+    nameEl.textContent = edition ? (edition + ' ' + name) : name;
+  }
+
+  function eventTitleText(){
+    const name = (data.config.eventName || '').trim() || 'Skokovi u cilj';
+    const edition = (data.config.eventEdition || '').trim();
+    return edition ? (edition + ' ' + name) : name;
+  }
+
+  function initSettings(){
+    const eventNameInput = document.getElementById('eventNameInput');
+    const eventEditionInput = document.getElementById('eventEditionInput');
+    eventNameInput.value = data.config.eventName || '';
+    eventEditionInput.value = data.config.eventEdition || '';
+    renderHeaderTitle();
+    eventNameInput.addEventListener('input', ()=>{
+      data.config.eventName = eventNameInput.value;
+      renderHeaderTitle();
+      saveDataDebounced(500);
+    });
+    eventEditionInput.addEventListener('input', ()=>{
+      // live header preview only — the actual archive-switch decision happens on change (blur/enter)
+      const preview = (eventEditionInput.value||'').trim();
+      const nameEl = document.getElementById('headerTitle');
+      const name = (data.config.eventName || '').trim() || 'Skokovi u cilj';
+      nameEl.textContent = preview ? (preview + ' ' + name) : name;
+    });
+    eventEditionInput.addEventListener('change', ()=>{
+      const newVal = eventEditionInput.value;
+      if((newVal||'').trim() === (data.config.eventEdition||'').trim()){
+        renderHeaderTitle();
+        return;
+      }
+      switchToNewEdition(newVal);
+    });
+
+    const sel = document.getElementById('numJumpsSelect');
+    const customField = document.getElementById('customJumpsField');
+    const customInput = document.getElementById('customJumpsInput');
+
+    function reflectSelect(){
+      const n = data.config.numJumps;
+      if(n === 5 || n === 9){
+        sel.value = String(n);
+        customField.style.display = 'none';
+      } else {
+        sel.value = 'custom';
+        customField.style.display = '';
+        customInput.value = n;
+      }
+    }
+    reflectSelect();
+
+    function applyNumJumps(newN){
+      newN = Math.max(1, Math.min(20, parseInt(newN,10) || data.config.numJumps));
+      if(newN === data.config.numJumps) return;
+      if(newN < data.config.numJumps){
+        const ok = confirm('Smanjujete broj skokova s '+data.config.numJumps+' na '+newN+'. Rezultati za skokove iznad '+newN+' bit će trajno obrisani. Nastaviti?');
+        if(!ok){ reflectSelect(); return; }
+      }
+      data.config.numJumps = newN;
+      syncAllResultsShape();
+      saveDataDebounced(200);
+      renderTeamsList();
+      renderResultsTab();
+      renderRangTab();
+    }
+
+    sel.addEventListener('change', ()=>{
+      if(sel.value === 'custom'){
+        customField.style.display = '';
+        customInput.value = data.config.numJumps;
+        customInput.focus();
+      } else {
+        customField.style.display = 'none';
+        applyNumJumps(parseInt(sel.value,10));
+      }
+    });
+    customInput.addEventListener('change', ()=> applyNumJumps(customInput.value));
+  }
+
+  // ---------------- Ekipe tab ----------------
+  function buildMembersGrid(existingComps){
+    console.log('[skokovi-u-cilj] buildMembersGrid called, existingComps=', existingComps);
+    const grid = document.getElementById('membersGrid');
+    console.log('[skokovi-u-cilj] grid element found:', grid);
+    grid.innerHTML = '';
+    const showAlkarski = roundsAvailable();
+    console.log('[skokovi-u-cilj] showAlkarski=', showAlkarski);
+    LETTERS.forEach((letter, idx)=>{
+      const existing = existingComps && existingComps[idx];
+      const val = existing ? existing.ime : '';
+      const alkarskiChecked = existing ? existing.alkarski !== false : true;
+      const div = document.createElement('div');
+      div.className = 'field member-slot';
+      div.innerHTML = '<label><span class="letter-badge">'+letter+'</span> Natjecatelj '+letter+'</label>'+
+        '<input type="text" data-letter="'+letter+'" class="member-input" placeholder="Ime i prezime (ostavi prazno ako fali)" value="'+escapeAttr(val)+'">'+
+        '<label class="member-alkarski-label" style="display:'+(showAlkarski?'flex':'none')+';">'+
+          '<input type="checkbox" data-letter="'+letter+'" class="member-alkarski-checkbox" '+(alkarskiChecked?'checked':'')+'>'+
+          'Bara/Čoja/Alka'+
+        '</label>';
+      grid.appendChild(div);
+    });
+    console.log('[skokovi-u-cilj] buildMembersGrid finished, grid.children.length=', grid.children.length);
+  }
+
+  function escapeAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
+  function escapeHtml(s){
+    return (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  }
+
+  function nextTeamNumber(){
+    if(data.teams.length===0) return 1;
+    return Math.max(...data.teams.map(t=>t.number)) + 1;
+  }
+
+  function resetTeamForm(){
+    document.getElementById('editingTeamId').value = '';
+    document.getElementById('teamNumber').value = nextTeamNumber();
+    document.getElementById('teamName').value = '';
+    buildMembersGrid(null);
+    document.getElementById('cancelEditBtn').style.display = 'none';
+    document.getElementById('saveTeamBtn').textContent = 'Spremi ekipu';
+  }
+
+  function loadTeamIntoForm(team){
+    document.getElementById('editingTeamId').value = team.number;
+    document.getElementById('teamNumber').value = team.number;
+    document.getElementById('teamName').value = team.name;
+    buildMembersGrid(team.competitors);
+    document.getElementById('cancelEditBtn').style.display = '';
+    document.getElementById('saveTeamBtn').textContent = 'Spremi izmjene';
+    document.getElementById('tab-ekipe').scrollIntoView({behavior:'smooth'});
+  }
+
+  function saveTeamFromForm(){
+    const editingId = document.getElementById('editingTeamId').value;
+    const number = parseInt(document.getElementById('teamNumber').value, 10);
+    const name = document.getElementById('teamName').value.trim();
+    if(!number || number < 1){ alert('Unesite ispravan broj ekipe.'); return; }
+    if(!name){ alert('Unesite naziv ekipe / kluba.'); return; }
+
+    const dup = data.teams.find(t => t.number === number && String(t.number) !== String(editingId));
+    if(dup){ alert('Ekipa s brojem '+number+' već postoji.'); return; }
+
+    const inputs = Array.from(document.querySelectorAll('.member-input'));
+    const alkarskiChecks = Array.from(document.querySelectorAll('.member-alkarski-checkbox'));
+    const competitors = LETTERS.map((letter)=>{
+      const inp = inputs.find(i=>i.dataset.letter===letter);
+      const chk = alkarskiChecks.find(i=>i.dataset.letter===letter);
+      return { letter, ime: inp ? inp.value.trim() : '', alkarski: chk ? chk.checked : true };
+    });
+    if(competitors.every(c=>!c.ime)){ alert('Unesite barem jednog natjecatelja.'); return; }
+
+    if(editingId && String(editingId) !== String(number)){
+      // team number changed while editing - remove old results keys
+      const oldTeam = data.teams.find(t=>String(t.number)===String(editingId));
+      if(oldTeam){
+        LETTERS.forEach(l=> delete data.results[competitorId(oldTeam.number, l)]);
+      }
+    }
+
+    const existingIdx = data.teams.findIndex(t=> String(t.number) === String(editingId));
+    const teamObj = { number, name, competitors };
+    if(existingIdx >= 0){
+      data.teams[existingIdx] = teamObj;
+    } else {
+      data.teams.push(teamObj);
+    }
+    data.teams.sort((a,b)=>a.number-b.number);
+    syncAllResultsShape();
+    saveDataDebounced(200);
+    resetTeamForm();
+    renderTeamsList();
+    populateTeamSelect();
+  }
+
+  function deleteTeam(number){
+    const team = data.teams.find(t=>t.number===number);
+    if(!team) return;
+    if(!confirm('Obrisati ekipu "'+team.name+'" (broj '+number+') i sve njene rezultate?')) return;
+    LETTERS.forEach(l=> delete data.results[competitorId(number,l)]);
+    data.teams = data.teams.filter(t=>t.number!==number);
+    saveDataDebounced(200);
+    renderTeamsList();
+    populateTeamSelect();
+  }
+
+  function renderTeamsList(){
+    const wrap = document.getElementById('teamsList');
+    if(data.teams.length===0){
+      wrap.innerHTML = '<div class="empty-state">Još nema unesenih ekipa.</div>';
+      return;
+    }
+    wrap.innerHTML = '';
+    data.teams.forEach(team=>{
+      const div = document.createElement('div');
+      div.className = 'team-card';
+      const membersHtml = team.competitors.map(c=>{
+        const label = c.letter + ' — ' + (c.ime && c.ime.trim() ? escapeHtml(c.ime) : 'prazno');
+        const excluded = roundsAvailable() && !isMissing(c) && c.alkarski === false;
+        return '<span class="chip'+(isMissing(c)?' missing':'')+'">'+label+(excluded ? ' <span style="color:var(--danger); font-weight:600;">✕B/Č/A</span>' : '')+'</span>';
+      }).join('');
+      div.innerHTML =
+        '<div class="info">'+
+          '<div class="team-name"><span class="num">'+team.number+'</span> — '+escapeHtml(team.name)+'</div>'+
+          '<div class="members">'+membersHtml+'</div>'+
+        '</div>'+
+        '<div class="actions">'+
+          '<button class="btn-icon edit-team">Uredi</button>'+
+          '<button class="btn-icon danger delete-team">Obriši</button>'+
+        '</div>';
+      div.querySelector('.edit-team').addEventListener('click', ()=>loadTeamIntoForm(team));
+      div.querySelector('.delete-team').addEventListener('click', ()=>deleteTeam(team.number));
+      wrap.appendChild(div);
+    });
+  }
+
+  // ---------------- Rezultati tab ----------------
+  function populateTeamSelect(){
+    const sel = document.getElementById('teamSelectForResults');
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">— odaberi ekipu —</option>' +
+      data.teams.map(t=>'<option value="'+t.number+'">'+t.number+' — '+escapeHtml(t.name)+'</option>').join('');
+    if(prev && data.teams.some(t=>String(t.number)===prev)) sel.value = prev;
+  }
+
+  function jumpLabels(n){
+    const roman = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX'];
+    return Array.from({length:n}, (_,i)=> roman[i] || String(i+1));
+  }
+
+  function renderResultsTab(){
+    populateTeamSelect();
+    renderResultsGrid();
+  }
+
+  function renderResultsGrid(){
+    const sel = document.getElementById('teamSelectForResults');
+    const wrap = document.getElementById('resultsGridWrap');
+    const note = document.getElementById('autosaveNote');
+    const teamNumber = parseInt(sel.value, 10);
+    const team = data.teams.find(t=>t.number===teamNumber);
+    if(!team){
+      wrap.innerHTML = '<div class="empty-state">Odaberite ekipu za unos rezultata.</div>';
+      note.textContent = '';
+      return;
+    }
+    const n = data.config.numJumps;
+    const labels = jumpLabels(n);
+
+    let html = '<div class="results-table-wrap"><table class="results-table"><thead><tr><th style="text-align:left;">Natjecatelj</th><th>&nbsp;</th>';
+    labels.forEach(l=> html += '<th>'+l+'</th>');
+    html += '<th>Ukupno</th></tr></thead><tbody>';
+
+    team.competitors.forEach(comp=>{
+      const missing = isMissing(comp);
+      const id = competitorId(team.number, comp.letter);
+      const arr = data.results[id] || [];
+      let totalPts=0, totalCm=0;
+      arr.forEach(r=>{ totalPts += (r.points||0); totalCm += (r.cm||0); });
+
+      const nameCell = comp.letter + (comp.ime && comp.ime.trim() ? ' — '+escapeHtml(comp.ime) : '');
+
+      html += '<tr class="'+(missing?'missing-row':'')+'">';
+      html += '<td class="competitor-name" rowspan="2">'+nameCell+'</td>';
+      html += '<td class="row-label">Punti</td>';
+      arr.forEach((r,i)=>{
+        const v = r.points===null||r.points===undefined ? '' : r.points;
+        html += '<td><input type="number" min="0" max="3" step="1" data-id="'+id+'" data-jump="'+i+'" data-field="points" value="'+v+'" '+(missing?'disabled':'')+'></td>';
+      });
+      html += '<td class="sum-cell" rowspan="2" data-sum-points="'+id+'">'+totalPts+' pt<br>'+totalCm+' cm</td>';
+      html += '</tr>';
+
+      html += '<tr class="'+(missing?'missing-row':'')+'">';
+      html += '<td class="row-label">Cm</td>';
+      arr.forEach((r,i)=>{
+        const cmAuto = !missing && !!r.cmAuto;
+        const v = cmAuto ? 16 : (r.cm===null||r.cm===undefined ? '' : r.cm);
+        const cmDisabled = missing || cmAuto;
+        html += '<td><input type="number" min="0" max="16" step="1" data-id="'+id+'" data-jump="'+i+'" data-field="cm" value="'+v+'" '+(cmDisabled?'disabled':'')+'></td>';
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    wrap.innerHTML = html;
+    note.textContent = 'Punti: cijeli broj 0–3. Centimetri: cijeli broj 0–16. Rezultati se automatski spremaju dok upisujete.';
+
+    const LIMITS = { points: {min:0, max:3}, cm: {min:0, max:16} };
+    let cmAdvanceTimer = null;
+
+    function focusInput(id, jump, field){
+      const el = document.querySelector('input[data-id="'+id+'"][data-jump="'+jump+'"][data-field="'+field+'"]');
+      if(el && !el.disabled){ el.focus(); if(el.select) el.select(); }
+      return el;
+    }
+
+    function clampAndStore(inp){
+      const id = inp.dataset.id, jump = parseInt(inp.dataset.jump,10), field = inp.dataset.field;
+      let val = inp.value === '' ? null : parseFloat(inp.value);
+      if(val !== null){
+        const lim = LIMITS[field];
+        if(isNaN(val) || !Number.isInteger(val) || val < lim.min || val > lim.max){
+          val = Math.round(val);
+          if(isNaN(val)) val = null;
+          else val = Math.max(lim.min, Math.min(lim.max, val));
+          inp.value = val === null ? '' : val;
+          inp.classList.add('input-corrected');
+          setTimeout(()=>inp.classList.remove('input-corrected'), 600);
+        }
+      }
+      if(!data.results[id]) data.results[id] = [];
+      if(!data.results[id][jump]) data.results[id][jump] = emptyResultRow();
+      const row = data.results[id][jump];
+      const finalVal = (val===null || isNaN(val)) ? null : val;
+      row[field] = finalVal;
+
+      let cmLockChanged = false;
+      if(field === 'points'){
+        const prevCm = row.cm, prevAuto = row.cmAuto;
+        if(row.points===0 || row.points===1 || row.points===2){
+          row.cm = 16; row.cmAuto = true;
+        } else if(row.cmAuto){
+          row.cm = null; row.cmAuto = false;
+        }
+        cmLockChanged = (row.cm !== prevCm) || (row.cmAuto !== prevAuto);
+      }
+      saveDataDebounced(700);
+      return { id, jump, field, row, cmLockChanged };
+    }
+
+    wrap.querySelectorAll('input[type=number]').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        clearTimeout(cmAdvanceTimer);
+        const { id, jump, field, row, cmLockChanged } = clampAndStore(inp);
+
+        if(field === 'points'){
+          updateSumCell(id);
+          if(cmLockChanged){
+            // cm field's disabled/value state must change in the DOM — rebuild, then focus
+            setTimeout(()=>{
+              renderResultsGrid();
+              if(row.points!=null && row.cm!=null) focusInput(id, jump+1, 'points');
+              else focusInput(id, jump, 'cm');
+            }, 0);
+          } else {
+            if(row.points!=null && row.cm!=null) focusInput(id, jump+1, 'points');
+            else focusInput(id, jump, 'cm');
+          }
+        } else {
+          // cm field: debounce so two-digit values (e.g. 16) can be fully typed first
+          updateSumCell(id);
+          cmAdvanceTimer = setTimeout(()=>{
+            if(row.points!=null && row.cm!=null) focusInput(id, jump+1, 'points');
+            else focusInput(id, jump, 'points');
+          }, 550);
+        }
+      });
+      inp.addEventListener('keydown', (e)=>{
+        // pressing Enter (keyboard entry on laptop) confirms the value immediately,
+        // skipping the debounce wait used to allow two-digit cm values like "16"
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          clearTimeout(cmAdvanceTimer);
+          const { id, jump, field, row, cmLockChanged } = clampAndStore(inp);
+          const doFocus = ()=>{
+            if(row.points!=null && row.cm!=null) focusInput(id, jump+1, 'points');
+            else if(field==='points') focusInput(id, jump, 'cm');
+            else focusInput(id, jump, 'points');
+          };
+          if(field==='points'){
+            updateSumCell(id);
+            if(cmLockChanged){ setTimeout(()=>{ renderResultsGrid(); doFocus(); }, 0); }
+            else { doFocus(); }
+          } else {
+            updateSumCell(id);
+            doFocus();
+          }
+        }
+      });
+      inp.addEventListener('blur', ()=>{
+        clearTimeout(cmAdvanceTimer);
+        clampAndStore(inp);
+      });
+    });
+  }
+
+  function updateSumCell(id){
+    const arr = data.results[id] || [];
+    let totalPts=0, totalCm=0;
+    arr.forEach(r=>{ totalPts += (r.points||0); totalCm += (r.cm||0); });
+    const cell = document.querySelector('[data-sum-points="'+id+'"]');
+    if(cell) cell.innerHTML = totalPts+' pt<br>'+totalCm+' cm';
+  }
+
+  // ---------------- Ranking logic (Bara / Čoja / Alka rounds + Ukupno) ----------------
+  const ROUND_GROUPS = {
+    bara: { label:'Bara',   startIdx:0, endIdx:2, isSubRound:true },
+    coja: { label:'Čoja',   startIdx:3, endIdx:5, isSubRound:true },
+    alka: { label:'Alka',   startIdx:6, endIdx:8, isSubRound:true }
+  };
+
+  function roundsAvailable(){
+    return data.config.numJumps === 9;
+  }
+
+  function getRoundGroup(key){
+    if(key && ROUND_GROUPS[key]) return ROUND_GROUPS[key];
+    return { label:'Ukupno', startIdx:0, endIdx: data.config.numJumps-1, isSubRound:false };
+  }
+
+  function competitorEligible(comp, onlySubRoundCompetitors){
+    return !onlySubRoundCompetitors || comp.alkarski !== false;
+  }
+
+  function sliceJumps(arr, startIdx, endIdx, n){
+    let a = arr || [];
+    if(a.length < n){
+      a = a.slice();
+      for(let i=a.length;i<n;i++) a.push(emptyResultRow());
+    }
+    return a.slice(startIdx, endIdx+1);
+  }
+
+  function compareStandings(a, b){
+    if(a.totalPoints !== b.totalPoints) return b.totalPoints - a.totalPoints;
+    if(a.totalCm !== b.totalCm) return a.totalCm - b.totalCm;
+    const cmA = [...a.cmValues].sort((x,y)=>x-y);
+    const cmB = [...b.cmValues].sort((x,y)=>x-y);
+    for(let i=0;i<Math.min(cmA.length,cmB.length);i++){
+      if(cmA[i] !== cmB[i]) return cmA[i]-cmB[i];
+    }
+    if(cmA.length !== cmB.length) return cmB.length - cmA.length; // more completed jumps ranks slightly higher when otherwise tied
+    const ptA = [...a.pointsValues].sort((x,y)=>y-x);
+    const ptB = [...b.pointsValues].sort((x,y)=>y-x);
+    for(let i=0;i<ptA.length;i++){
+      if(ptA[i] !== ptB[i]) return ptB[i]-ptA[i];
+    }
+    return 0;
+  }
+
+  function rankList(list){
+    const ranked = list.filter(c => c.missing || c.jumpsEntered > 0);
+    const notStarted = list.filter(c => !c.missing && c.jumpsEntered === 0);
+    ranked.sort(compareStandings);
+    for(let i=0;i<ranked.length;i++){
+      if(i>0 && compareStandings(ranked[i-1], ranked[i]) === 0){
+        ranked[i].place = ranked[i-1].place;
+      } else {
+        ranked[i].place = i+1;
+      }
+    }
+    return { ranked, notStarted };
+  }
+
+  function buildGroupIndividualStandings(startIdx, endIdx, onlySubRoundCompetitors){
+    const n = data.config.numJumps;
+    const list = [];
+    data.teams.forEach(team=>{
+      team.competitors.forEach(comp=>{
+        if(!competitorEligible(comp, onlySubRoundCompetitors)) return;
+        const missing = isMissing(comp);
+        const id = competitorId(team.number, comp.letter);
+        const arr = data.results[id] || [];
+        const slice = sliceJumps(arr, startIdx, endIdx, n);
+        const enteredRows = slice.filter(r => r && r.points!==null && r.points!==undefined && r.cm!==null && r.cm!==undefined);
+        const jumpsEntered = enteredRows.length;
+        const totalJumps = endIdx - startIdx + 1;
+        const pointsValues = enteredRows.map(r=>r.points);
+        const cmValues = enteredRows.map(r=>r.cm);
+        const totalPoints = pointsValues.reduce((a,b)=>a+b,0);
+        const totalCm = cmValues.reduce((a,b)=>a+b,0);
+        list.push({
+          id, teamNumber:team.number, letter:comp.letter,
+          natBroj: team.number + comp.letter,
+          ime: missing ? '(prazno mjesto)' : comp.ime,
+          klub: team.name,
+          missing, jumpsEntered, totalJumps,
+          totalPoints, totalCm, pointsValues, cmValues
+        });
+      });
+    });
+    return list;
+  }
+
+  function buildGroupTeamStandings(startIdx, endIdx, onlySubRoundCompetitors){
+    const n = data.config.numJumps;
+    const groupSize = endIdx - startIdx + 1;
+    return data.teams
+      .map(team=>{
+      const eligibleComps = team.competitors.filter(comp => competitorEligible(comp, onlySubRoundCompetitors));
+      let totalPoints=0, totalCm=0, jumpsEntered=0;
+      const pointsValues=[], cmValues=[];
+      eligibleComps.forEach(comp=>{
+        const id = competitorId(team.number, comp.letter);
+        const arr = data.results[id] || [];
+        const slice = sliceJumps(arr, startIdx, endIdx, n);
+        slice.forEach(r=>{
+          if(r && r.points!==null && r.points!==undefined && r.cm!==null && r.cm!==undefined){
+            totalPoints += r.points; totalCm += r.cm;
+            pointsValues.push(r.points); cmValues.push(r.cm);
+            jumpsEntered++;
+          }
+        });
+      });
+      return {
+        teamNumber: team.number, name: team.name, missing: eligibleComps.length===0,
+        jumpsEntered, totalJumps: groupSize * eligibleComps.length,
+        totalPoints, totalCm, pointsValues, cmValues
+      };
+    })
+    .filter(t => t.totalJumps > 0); // teams with zero eligible competitors for this round don't appear at all
+  }
+
+  function renderRoundSectionHtml(group){
+    const n = data.config.numJumps;
+    const labels = jumpLabels(n).slice(group.startIdx, group.endIdx+1);
+    const totalJumpsInGroup = group.endIdx - group.startIdx + 1;
+
+    const indivAll = buildGroupIndividualStandings(group.startIdx, group.endIdx, group.isSubRound);
+    const { ranked: indivRanked, notStarted } = rankList(indivAll);
+
+    let html = '<div class="incomplete-banner">Poredak je prikazan na temelju trenutno upisanih skokova i mijenja se uživo. "Upisano" pokazuje koliko je od ukupno '+totalJumpsInGroup+' skokova ('+group.label+') evidentirano.'+(group.isSubRound ? ' Natjecatelji označeni kao izvan Bara/Čoja/Alka ovdje se ne prikazuju (i dalje broje u Ukupno).' : '')+'</div>';
+
+    html += '<h3 class="section-subtitle">'+group.label+' — pojedinačno</h3>';
+    if(indivRanked.length===0){
+      html += '<div class="empty-state">Još nema unesenih rezultata za ovaj naslov.</div>';
+    } else {
+      html += '<div class="rank-table-wrap"><table class="rank-table"><thead><tr><th>Mjesto</th><th>Br.</th><th>Ime i prezime</th><th>Klub</th>';
+      labels.forEach(l=> html += '<th class="jump-head">'+l+'</th>');
+      html += '<th>Rezultat</th><th>Upisano</th></tr></thead><tbody>';
+      indivRanked.forEach(c=>{
+        const full = c.missing || c.jumpsEntered === c.totalJumps;
+        const arr = data.results[c.id] || [];
+        const slice = sliceJumps(arr, group.startIdx, group.endIdx, n);
+        html += '<tr><td class="place">'+c.place+'.</td><td class="num">'+c.natBroj+'</td><td>'+escapeHtml(c.ime)+'</td><td>'+escapeHtml(c.klub)+'</td>';
+        slice.forEach(r=>{
+          if(r && r.points!==null && r.points!==undefined && r.cm!==null && r.cm!==undefined){
+            html += '<td class="jump-cell"><span class="jp">'+r.points+'</span><span class="jc">'+r.cm+' cm</span></td>';
+          } else {
+            html += '<td class="jump-cell empty">—</td>';
+          }
+        });
+        html += '<td class="result-cell"><span class="pts-big">'+c.totalPoints+'</span><span class="pts-unit">punata</span><span class="cm-line">'+c.totalCm+' cm</span></td>'+
+          '<td class="progress'+(full?' full':'')+'">'+(c.missing ? '—' : c.jumpsEntered+'/'+c.totalJumps)+'</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    if(notStarted.length>0){
+      html += '<h3 style="margin-top:20px; font-size:13px; color:var(--ink-dim);">Natjecatelji koji još nisu skočili nijednu seriju u ovom naslovu</h3>';
+      html += '<table class="rank-table"><thead><tr><th>Br.</th><th>Ime i prezime</th><th>Klub</th></tr></thead><tbody>';
+      notStarted.forEach(c=>{
+        html += '<tr><td class="num">'+c.natBroj+'</td><td>'+escapeHtml(c.ime)+'</td><td>'+escapeHtml(c.klub)+'</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+
+    if(!group.isSubRound){
+      const teamAll = buildGroupTeamStandings(group.startIdx, group.endIdx, group.isSubRound);
+      const { ranked: teamRanked } = rankList(teamAll);
+      html += '<h3 class="section-subtitle">'+group.label+' — ekipno</h3>';
+      if(teamRanked.length===0){
+        html += '<div class="empty-state">Još nema unesenih rezultata ni za jednu ekipu.</div>';
+      } else {
+        html += '<table class="team-rank-table"><thead><tr><th>Mjesto</th><th>Br.</th><th>Naziv ekipe</th><th>Rezultat</th><th>Upisano</th></tr></thead><tbody>';
+        teamRanked.forEach(t=>{
+          const full = t.jumpsEntered === t.totalJumps;
+          html += '<tr><td class="place">'+t.place+'.</td><td class="num">'+t.teamNumber+'</td><td>'+escapeHtml(t.name)+'</td>'+
+            '<td class="result-cell"><span class="pts-big">'+t.totalPoints+'</span><span class="pts-unit">punata</span><span class="cm-line">'+t.totalCm+' cm</span></td>'+
+            '<td class="progress'+(full?' full':'')+'">'+t.jumpsEntered+'/'+t.totalJumps+'</td></tr>';
+        });
+        html += '</tbody></table>';
+      }
+    }
+    return html;
+  }
+
+  function renderRangTab(){
+    const holder = document.getElementById('rangContent');
+    const roundRow = document.getElementById('rangRoundRow');
+    const roundSelect = document.getElementById('rangRoundSelect');
+    const showRoundSelector = roundsAvailable();
+    roundRow.style.display = showRoundSelector ? '' : 'none';
+
+    if(data.teams.length===0){
+      holder.innerHTML = '<div class="empty-state">Nema unesenih ekipa.</div>';
+      return;
+    }
+    const roundKey = showRoundSelector ? roundSelect.value : 'ukupno';
+    const group = getRoundGroup(roundKey);
+    holder.innerHTML = renderRoundSectionHtml(group);
+  }
+
+  // ---------------- Pravila tab ----------------
+  function renderPravilaTab(){
+    const ta = document.getElementById('rulesTextarea');
+    if(document.activeElement !== ta){
+      ta.value = data.rules || '';
+    }
+  }
+
+  // ---------------- Ispis tab ----------------
+  function renderIspisTab(){
+    const type = document.getElementById('reportTypeSelect').value;
+    const preview = document.getElementById('reportPreview');
+    document.getElementById('rangPrintRoundField').style.display = (type==='rang' && roundsAvailable()) ? '' : 'none';
+    if(type==='pravila'){
+      preview.innerHTML = buildPravilaReportHtml();
+      return;
+    }
+    if(data.teams.length===0){
+      preview.innerHTML = '<div class="empty-state">Nema unesenih ekipa za ispis.</div>';
+      return;
+    }
+    if(type==='rang') preview.innerHTML = buildRangReportHtml();
+    else if(type==='radni') preview.innerHTML = buildRadniListHtml();
+    else preview.innerHTML = buildPojedinacniHtml();
+  }
+
+  function buildPravilaReportHtml(){
+    const text = (data.rules || '').trim();
+    let html = '<div class="report-title"><h2>Pravila natjecanja</h2><div class="meta">'+escapeHtml(eventTitleText())+'</div></div>';
+    if(!text){
+      html += '<div class="empty-state">Pravila još nisu unesena.</div>';
+    } else {
+      html += '<div class="rules-print-text">'+escapeHtml(text)+'</div>';
+    }
+    return html;
+  }
+
+  function buildRangReportHtml(){
+    const roundKey = roundsAvailable() ? document.getElementById('rangPrintRound').value : 'ukupno';
+    const group = getRoundGroup(roundKey);
+    const n = data.config.numJumps;
+    const labels = jumpLabels(n).slice(group.startIdx, group.endIdx+1);
+
+    const indivAll = buildGroupIndividualStandings(group.startIdx, group.endIdx, group.isSubRound);
+    const { ranked: indivRanked, notStarted } = rankList(indivAll);
+
+    let html = '<div class="report-title"><h2>Rang lista — '+group.label+'</h2><div class="meta">'+escapeHtml(eventTitleText())+' · '+new Date().toLocaleDateString('hr-HR')+'</div></div>';
+    html += '<table class="sheet-table"><thead><tr><th style="width:50px;">Mjesto</th><th style="width:50px;">Br.</th><th style="text-align:left;">Ime i prezime</th><th style="text-align:left;">Klub</th>';
+    labels.forEach(l=> html += '<th style="width:38px;">'+l+'</th>');
+    html += '<th style="width:100px;">Rezultat</th><th style="width:55px;">Upisano</th></tr></thead><tbody>';
+    indivRanked.forEach(c=>{
+      const arr = data.results[c.id] || [];
+      const slice = sliceJumps(arr, group.startIdx, group.endIdx, n);
+      html += '<tr><td>'+c.place+'.</td><td>'+c.natBroj+'</td><td class="name-cell">'+escapeHtml(c.ime)+'</td><td class="name-cell">'+escapeHtml(c.klub)+'</td>';
+      slice.forEach(r=>{
+        if(r && r.points!==null && r.points!==undefined && r.cm!==null && r.cm!==undefined){
+          html += '<td>'+r.points+'<br><span style="font-size:9px;color:#666;">'+r.cm+'cm</span></td>';
+        } else {
+          html += '<td>—</td>';
+        }
+      });
+      html += '<td><strong>'+c.totalPoints+'</strong> punata<br>'+c.totalCm+' cm</td><td>'+(c.missing?'—':c.jumpsEntered+'/'+c.totalJumps)+'</td></tr>';
+    });
+    html += '</tbody></table>';
+    if(notStarted.length){
+      html += '<div class="team-block-title">Natjecatelji koji još nisu skočili nijednu seriju</div>';
+      html += '<table class="sheet-table"><thead><tr><th style="width:60px;">Br.</th><th style="text-align:left;">Ime i prezime</th><th style="text-align:left;">Klub</th></tr></thead><tbody>';
+      notStarted.forEach(c=>{
+        html += '<tr><td>'+c.natBroj+'</td><td class="name-cell">'+escapeHtml(c.ime)+'</td><td class="name-cell">'+escapeHtml(c.klub)+'</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+
+    if(!group.isSubRound){
+      const teamAll = buildGroupTeamStandings(group.startIdx, group.endIdx, group.isSubRound);
+      const { ranked: teamRanked } = rankList(teamAll);
+      html += '<div class="team-block-title">'+group.label+' — ekipno</div>';
+      html += '<table class="sheet-table"><thead><tr><th style="width:60px;">Mjesto</th><th style="width:60px;">Br.</th><th style="text-align:left;">Naziv ekipe</th><th style="width:100px;">Rezultat</th><th style="width:55px;">Upisano</th></tr></thead><tbody>';
+      teamRanked.forEach(t=>{
+        html += '<tr><td>'+t.place+'.</td><td>'+t.teamNumber+'</td><td class="name-cell">'+escapeHtml(t.name)+'</td><td><strong>'+t.totalPoints+'</strong> punata<br>'+t.totalCm+' cm</td><td>'+t.jumpsEntered+'/'+t.totalJumps+'</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+    return html;
+  }
+
+  function buildRadniListHtml(){
+    const n = data.config.numJumps;
+    const labels = jumpLabels(n);
+    let html = '<div class="report-title"><h2>Radni list rezultata po ekipama</h2><div class="meta">'+escapeHtml(eventTitleText())+' · '+n+' serija skokova · '+new Date().toLocaleDateString('hr-HR')+'</div></div>';
+    data.teams.forEach(team=>{
+      html += '<div class="team-block-title">Ekipa '+team.number+' — '+escapeHtml(team.name)+'</div>';
+      html += '<table class="sheet-table"><thead><tr><th style="text-align:left;">Br.</th><th style="text-align:left;">Ime i prezime</th>';
+      labels.forEach(l=> html += '<th>'+l+'</th>');
+      html += '<th>Sum</th></tr></thead><tbody>';
+      team.competitors.forEach(comp=>{
+        const missing = isMissing(comp);
+        const id = competitorId(team.number, comp.letter);
+        const arr = data.results[id] || [];
+        let totalPts=0, totalCm=0;
+        arr.forEach(r=>{ totalPts += (r.points||0); totalCm += (r.cm||0); });
+        const nameDisplay = missing ? '(prazno mjesto)' : escapeHtml(comp.ime);
+        html += '<tr><td class="name-cell">'+team.number+comp.letter+'</td><td class="name-cell">'+nameDisplay+'</td>';
+        arr.forEach(r=> html += '<td>'+ (r.points===null||r.points===undefined?'':r.points) +'</td>');
+        html += '<td>'+totalPts+' pt</td></tr>';
+        html += '<tr><td></td><td class="small-label">cm</td>';
+        arr.forEach(r=> html += '<td>'+ (r.cm===null||r.cm===undefined?'':r.cm) +'</td>');
+        html += '<td>'+totalCm+' cm</td></tr>';
+      });
+      html += '</tbody>';
+      html += '<tfoot><tr class="sig-row"><td colspan="2" style="text-align:left;">Potpis vođe ekipe</td>';
+      labels.forEach(()=> html += '<td>&nbsp;</td>');
+      html += '<td></td></tr></tfoot>';
+      html += '</table>';
+    });
+    return html;
+  }
+
+  function buildPojedinacniHtml(){
+    const labels = jumpLabels(data.config.numJumps);
+    let html = '<div class="report-title"><h2>Pojedinačni bodovni obrasci</h2><div class="meta">'+escapeHtml(eventTitleText())+' · Natjecateljski broj, ime i prezime, klub, serija skokova, punti i cm</div></div>';
+    data.teams.forEach(team=>{
+      team.competitors.forEach(comp=>{
+        const missing = isMissing(comp);
+        const id = competitorId(team.number, comp.letter);
+        const arr = data.results[id] || [];
+        const nameDisplay = missing ? '(prazno mjesto)' : escapeHtml(comp.ime);
+        html += '<table class="indiv-table"><thead><tr><th style="width:70px;">Broj</th><th>Ime i prezime</th><th>Klub</th><th style="width:70px;">Skok</th><th style="width:110px;">Punti i cm</th></tr></thead><tbody>';
+        arr.forEach((r,i)=>{
+          const pts = r.points===null||r.points===undefined ? '—' : r.points;
+          const cm = r.cm===null||r.cm===undefined ? '—' : r.cm;
+          html += '<tr>';
+          if(i===0){
+            html += '<td class="rowspan-cell" rowspan="'+arr.length+'">'+team.number+comp.letter+'</td>';
+            html += '<td class="rowspan-cell" rowspan="'+arr.length+'">'+nameDisplay+'</td>';
+            html += '<td class="rowspan-cell" rowspan="'+arr.length+'">'+escapeHtml(team.name)+'</td>';
+          }
+          html += '<td class="jump-col">'+labels[i]+'</td>';
+          html += '<td class="score-cell"><span class="pts">'+pts+' punata</span><br><span class="cm">'+cm+' cm</span></td>';
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+      });
+    });
+    return html;
+  }
+
+  // ---------------- Init ----------------
+  function setupPublicLinkCard(){
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.searchParams.set('public', '1');
+    const input = document.getElementById('publicLinkInput');
+    input.value = url.toString();
+    document.getElementById('copyPublicLinkBtn').addEventListener('click', async ()=>{
+      const btn = document.getElementById('copyPublicLinkBtn');
+      try{
+        await navigator.clipboard.writeText(input.value);
+      } catch(e){
+        input.select();
+        document.execCommand('copy');
+      }
+      const original = btn.textContent;
+      btn.textContent = 'Kopirano!';
+      setTimeout(()=>{ btn.textContent = original; }, 1500);
+    });
+  }
+
+  function showFatalError(step, err){
+    const banner = document.createElement('div');
+    banner.style.cssText = 'max-width:640px; margin:20px auto; padding:18px 22px; border:2px solid #C0392B; border-radius:10px; font-family:Inter,sans-serif; background:#FBE9E6; color:#7A1F17; white-space:pre-wrap; font-size:13px;';
+    banner.innerHTML = '<strong style="font-family:Oswald,sans-serif; font-size:15px; display:block; margin-bottom:8px;">Greška pri pokretanju (korak: '+step+')</strong>'+
+      escapeHtmlSafe(err && err.message ? err.message : String(err)) +
+      (err && err.stack ? '<br><br><code style="font-size:11px; opacity:.8;">'+escapeHtmlSafe(err.stack)+'</code>' : '');
+    document.getElementById('app').prepend(banner);
+  }
+  function escapeHtmlSafe(s){
+    return String(s==null?'':s).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  }
+
+  async function init(){
+    console.log('[skokovi-u-cilj] init: start');
+
+    // Set up a temporary local dataset immediately so the UI (tabs, team form) is usable
+    // right away, even if the database connection is slow, hanging, or unreachable.
+    data = normalizeData({});
+    currentEditionKey = sanitizeEditionKey('');
+
+    try{ initTabs(); console.log('[skokovi-u-cilj] initTabs OK'); } catch(err){ console.error('[skokovi-u-cilj] initTabs FAILED', err); showFatalError('initTabs', err); return; }
+    try{ initSettings(); console.log('[skokovi-u-cilj] initSettings OK'); } catch(err){ console.error('[skokovi-u-cilj] initSettings FAILED', err); showFatalError('initSettings', err); return; }
+    try{ resetTeamForm(); console.log('[skokovi-u-cilj] resetTeamForm OK, membersGrid children=', document.getElementById('membersGrid').children.length); } catch(err){ console.error('[skokovi-u-cilj] resetTeamForm FAILED', err); showFatalError('resetTeamForm', err); return; }
+    try{ renderTeamsList(); console.log('[skokovi-u-cilj] renderTeamsList OK'); } catch(err){ console.error('[skokovi-u-cilj] renderTeamsList FAILED', err); showFatalError('renderTeamsList', err); return; }
+    try{ populateTeamSelect(); console.log('[skokovi-u-cilj] populateTeamSelect OK'); } catch(err){ console.error('[skokovi-u-cilj] populateTeamSelect FAILED', err); showFatalError('populateTeamSelect', err); return; }
+    try{ setupPublicLinkCard(); console.log('[skokovi-u-cilj] setupPublicLinkCard OK'); } catch(err){ console.error('[skokovi-u-cilj] setupPublicLinkCard FAILED', err); showFatalError('setupPublicLinkCard', err); return; }
+    console.log('[skokovi-u-cilj] UI ready (before database), membersGrid children=', document.getElementById('membersGrid').children.length);
+
+    if(SPECTATOR_MODE){
+      document.body.classList.add('spectator-mode');
+      document.getElementById('headerSub').innerHTML = 'Javni pregled rezultata <span class="live-badge"><span class="dot"></span>uživo</span>';
+      const rangBtn = document.querySelector('.tab-btn[data-tab="rang"]');
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+      rangBtn.classList.add('active');
+      document.getElementById('tab-rang').classList.add('active');
+      renderRangTab();
+    }
+
+    document.getElementById('saveTeamBtn').addEventListener('click', saveTeamFromForm);
+    document.getElementById('cancelEditBtn').addEventListener('click', resetTeamForm);
+    document.getElementById('teamSelectForResults').addEventListener('change', renderResultsGrid);
+    document.getElementById('reportTypeSelect').addEventListener('change', renderIspisTab);
+    document.getElementById('rangRoundSelect').addEventListener('change', renderRangTab);
+    document.getElementById('rangPrintRound').addEventListener('change', renderIspisTab);
+    document.getElementById('printBtn').addEventListener('click', ()=> window.print());
+
+    const rulesTextarea = document.getElementById('rulesTextarea');
+    rulesTextarea.value = data.rules || '';
+    rulesTextarea.addEventListener('input', ()=>{
+      data.rules = rulesTextarea.value;
+      saveDataDebounced(700);
+    });
+
+    document.getElementById('loadArchiveBtn').addEventListener('click', async ()=>{
+      const listHolder = document.getElementById('archiveList');
+      listHolder.innerHTML = '<div class="hint">Učitavanje…</div>';
+      try{
+        const editions = await listArchivedEditions();
+        if(editions.length===0){
+          listHolder.innerHTML = '<div class="hint">Nema još spremljenih izdanja.</div>';
+          return;
+        }
+        listHolder.innerHTML = '';
+        editions.forEach(ed=>{
+          const div = document.createElement('div');
+          div.className = 'archive-item';
+          const isCurrent = ed.key === currentEditionKey;
+          div.innerHTML = '<div class="info"><span class="ed">'+escapeHtml(ed.edition)+'</span>'+escapeHtml(ed.name)+(isCurrent?' <em>(trenutno aktivno)</em>':'')+'</div>'+
+            '<button class="btn-icon archive-open-btn" '+(isCurrent?'disabled':'')+'>Otvori</button>';
+          div.querySelector('.archive-open-btn').addEventListener('click', ()=> openArchivedEdition(ed.key));
+          listHolder.appendChild(div);
+        });
+      } catch(e){
+        listHolder.innerHTML = '<div class="hint">Greška pri dohvaćanju arhive.</div>';
+      }
+    });
+
+    document.getElementById('exitArchiveBtn').addEventListener('click', exitArchiveMode);
+
+    // Now connect to the database in the background. The UI above is already
+    // usable regardless of how this turns out; when/if it resolves, refresh the view.
+    console.log('[skokovi-u-cilj] connecting to database in background…');
+    loadData().then(()=>{
+      console.log('[skokovi-u-cilj] background loadData finished, data=', data);
+      fullRerenderAfterRemoteUpdate();
+      if(!document.getElementById('editingTeamId').value) resetTeamForm();
+    }).catch(err=>{
+      console.error('[skokovi-u-cilj] background loadData threw unexpectedly', err);
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
