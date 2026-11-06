@@ -6,6 +6,7 @@
 <title>Alkarski Padobranski Kup — Rezultati</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.17.1/firebase-app-compat.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.17.1/firebase-firestore-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.17.1/firebase-auth-compat.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@500;700&display=swap');
 
@@ -72,6 +73,7 @@ h1,h2,h3,.display{
   border:1px solid rgba(255,255,255,.18);
 }
 .sync-pill.ok{background:rgba(47,122,79,.25); border-color:rgba(47,122,79,.5); color:#BFE9CE;}
+.sync-pill.warn{background:rgba(212,160,23,.25); border-color:rgba(212,160,23,.5); color:#F4E2A8;}
 .sync-pill.err{background:rgba(178,58,46,.3); border-color:rgba(178,58,46,.6); color:#F7CFC9;}
 
 /* ---------- Tabs ---------- */
@@ -269,8 +271,14 @@ body.spectator-mode .tab-btn[data-tab="ispis"],
 body.spectator-mode .tab-btn[data-tab="arhiva"]{display:none;}
 body:not(.spectator-mode) .tab-btn[data-tab="info"]{display:none;}
 body.spectator-mode #publicLinkCard{display:none !important;}
-body.spectator-mode #buildTag{display:none;}
 body.spectator-mode .sync-pill{display:none;}
+body.spectator-mode #authBar, body.spectator-mode #backupCard{display:none !important;}
+.auth-bar{display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:10px 14px; margin-bottom:14px; border-radius:10px; font-size:14px; background:#FFF4E0; border:1px solid #F0C36D; color:#6B4300;}
+.auth-bar.ok{background:#E9F6EE; border-color:#A6D7B7; color:#1F5C38;}
+.auth-bar .grow{flex:1; min-width:200px;}
+body.locked .lockable{pointer-events:none; opacity:.45;}
+.backup-row{display:flex; gap:10px; flex-wrap:wrap; margin:10px 0;}
+.hist-item{display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border:1px solid var(--line); border-radius:8px; margin-bottom:6px; font-size:13.5px;}
 body.spectator-mode #rangRoundRow + #rangStats{margin-top:0;}
 @media (max-width:519px){ .app-header{padding:14px 16px; gap:12px;} .app-header .target-logo svg{width:40px; height:40px;} }
 @media (max-width:519px){ body.spectator-mode #tab-rang .hint:first-of-type{display:none;} }
@@ -349,7 +357,6 @@ body.archive-mode #tab-pravila textarea{
     <div class="titles">
       <h1 id="headerTitle">Alkarski Padobranski Kup</h1>
       <div class="sub" id="headerSub">Ekipe, unos rezultata i rang lista</div>
-      <div class="sub" id="buildTag" style="opacity:.6; font-size:10px;"></div>
     </div>
     <div class="sync-pill" id="syncPill">Učitavanje…</div>
   </div>
@@ -357,6 +364,11 @@ body.archive-mode #tab-pravila textarea{
   <div class="archive-banner no-print" id="archiveBanner" style="display:none;">
     <span id="archiveBannerText">Pregled arhive — samo za čitanje</span>
     <button class="btn secondary" id="exitArchiveBtn">Natrag na tekuće natjecanje</button>
+  </div>
+
+  <div class="auth-bar no-print" id="authBar" style="display:none;">
+    <span class="grow" id="authBarText"></span>
+    <button class="btn secondary" id="authBtn" type="button"></button>
   </div>
 
   <div class="tabs no-print" id="mainTabs">
@@ -370,7 +382,7 @@ body.archive-mode #tab-pravila textarea{
   </div>
 
   <!-- ================= EKIPE TAB ================= -->
-  <div class="tab-content active" id="tab-ekipe">
+  <div class="tab-content active lockable" id="tab-ekipe">
 
     <div class="card">
       <h2><span class="ring-dot"></span>Postavke natjecanja</h2>
@@ -447,7 +459,7 @@ body.archive-mode #tab-pravila textarea{
   </div>
 
   <!-- ================= REZULTATI TAB ================= -->
-  <div class="tab-content" id="tab-rezultati">
+  <div class="tab-content lockable" id="tab-rezultati">
     <div class="card">
       <h2><span class="ring-dot"></span>Unos rezultata po ekipi</h2>
       <div class="hint">Dozvoljene vrijednosti — Punti: 0, 1, 2 ili 3. Centimetri: cijeli broj od 0 do 16. Ostale vrijednosti se automatski ispravljaju na najbliži dozvoljeni broj. Ako su punti 0, 1 ili 2, centimetri se automatski postavljaju na 16 (mjeri se samo kad je pogodak vrijedan 3 punta).</div>
@@ -490,7 +502,7 @@ body.archive-mode #tab-pravila textarea{
   </div>
 
   <!-- ================= PRAVILA TAB ================= -->
-  <div class="tab-content" id="tab-pravila">
+  <div class="tab-content lockable" id="tab-pravila">
     <div class="card">
       <h2><span class="ring-dot"></span>Pravila natjecanja</h2>
       <div class="hint" id="rulesAdminHint">Slobodan unos teksta — pravila, propozicije, napomene za suce ili natjecatelje. Sprema se automatski i može se ispisati (tab "Ispis / Print"). Natjecatelji ga vide u javnom pregledu.</div>
@@ -515,6 +527,17 @@ body.archive-mode #tab-pravila textarea{
       <div class="hint">Svako izdanje (redni broj) sprema se trajno i odvojeno. Ovdje možete pogledati stara izdanja u načinu samo za čitanje, bez rizika da nešto promijenite.</div>
       <button class="btn secondary" id="loadArchiveBtn">Osvježi popis</button>
       <div class="archive-list" id="archiveList"></div>
+    </div>
+    <div class="card no-print" id="backupCard">
+      <h2><span class="ring-dot"></span>Sigurnosna kopija</h2>
+      <div class="hint">Preuzmite kopiju trenutnog natjecanja u datoteku (JSON) ili vratite stanje iz kopije. Na ovom uređaju se automatski čuva i nekoliko zadnjih spremanja.</div>
+      <div class="backup-row">
+        <button class="btn secondary" id="backupDownloadBtn" type="button">Preuzmi kopiju</button>
+        <button class="btn secondary" id="backupUploadBtn" type="button">Učitaj kopiju…</button>
+        <input type="file" id="backupFileInput" accept="application/json,.json" style="display:none;">
+      </div>
+      <h3 style="margin-top:16px; font-size:14px; color:var(--ink-dim);">Zadnja spremanja na ovom uređaju</h3>
+      <div id="historyList"><div class="hint">Još nema spremanja.</div></div>
     </div>
   </div>
 
@@ -548,13 +571,6 @@ body.archive-mode #tab-pravila textarea{
 
 <script>
 (function(){
-  const APP_BUILD = 'debug-build-17';
-  console.log('[skokovi-u-cilj] Verzija koda:', APP_BUILD);
-  document.addEventListener('DOMContentLoaded', function(){
-    const tag = document.getElementById('buildTag');
-    if(tag) tag.textContent = 'build: ' + APP_BUILD;
-  });
-  if(document.getElementById('buildTag')) document.getElementById('buildTag').textContent = 'build: ' + APP_BUILD;
   window.addEventListener('error', function(e){
     if(document.getElementById('fatalErrorBannerShown')) return; // show only once, never spam
     const banner = document.createElement('div');
@@ -600,6 +616,25 @@ body.archive-mode #tab-pravila textarea{
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
   db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+  // Rad bez interneta: upisi se čuvaju na uređaju i šalju kad se veza vrati.
+  try{ db.enablePersistence({ synchronizeTabs: true }).catch(function(e){ console.warn('Offline mod nije dostupan:', e && e.code); }); } catch(e){ console.warn('Offline mod nije dostupan', e); }
+  const auth = firebase.auth();
+  // Samo ovi računi smiju uređivati (stvarnu zaštitu daju Firestore pravila).
+  const ADMIN_EMAILS = ['d.matic91@gmail.com'];
+  let currentUser = null;
+  function canEdit(){ return !!currentUser && ADMIN_EMAILS.indexOf((currentUser.email||'').toLowerCase()) >= 0; }
+  let dbLoaded = false;
+  let lastSaved = null;
+  let pendingSync = false;
+  let deferredSnapshot = null;
+  let loadRetryTimer = null;
+  function deepCopy(o){ return JSON.parse(JSON.stringify(o)); }
+  function stable(v){
+    if(v === undefined) return 'undefined';
+    if(v === null || typeof v !== 'object') return JSON.stringify(v);
+    if(Array.isArray(v)) return '['+v.map(stable).join(',')+']';
+    return '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+stable(v[k])).join(',')+'}';
+  }
   const COLLECTION = 'natjecanja';
   const META_DOC_ID = '_meta';
 
@@ -694,21 +729,46 @@ body.archive-mode #tab-pravila textarea{
 
   function attachListener(editionKey){
     detachListener();
-    unsubscribeListener = db.collection(COLLECTION).doc(editionKey).onSnapshot(snapshot=>{
+    unsubscribeListener = db.collection(COLLECTION).doc(editionKey).onSnapshot({ includeMetadataChanges: true }, snapshot=>{
       if(snapshot.metadata.hasPendingWrites) return; // ignore echo of our own writes
+      if(pendingSync && !snapshot.metadata.fromCache){
+        pendingSync = false;
+        setSyncPill('ok', 'Spremljeno u bazu podataka');
+      }
       if(archiveMode) return; // browsing an old edition — don't let live edition overwrite the view
-      if(hasUnsavedChanges || saveTimer) return; // never clobber unsaved local edits
-      const active = document.activeElement;
-      if(active && (active.tagName==='INPUT' || active.tagName==='SELECT' || active.tagName==='TEXTAREA')) return;
       if(!snapshot.exists) return;
-      data = normalizeData(snapshot.data());
-      syncAllResultsShape();
-      fullRerenderAfterRemoteUpdate();
-      setSyncPill('ok', 'Ažurirano s drugog uređaja');
+      if(hasUnsavedChanges || saveTimer){ deferredSnapshot = snapshot; return; }
+      const active = document.activeElement;
+      if(active && (active.tagName==='INPUT' || active.tagName==='SELECT' || active.tagName==='TEXTAREA')){ deferredSnapshot = snapshot; return; }
+      applyRemoteSnapshot(snapshot);
     }, err=>{
       setSyncPill('err', 'Greška veze s bazom — provjerite internet');
     });
   }
+
+  function applyRemoteSnapshot(snapshot){
+    deferredSnapshot = null;
+    const keep = data;
+    let shaped;
+    try{
+      data = normalizeData(deepCopy(snapshot.data()));
+      syncAllResultsShape();
+      shaped = data;
+    } finally { data = keep; }
+    if(stable(shaped) === stable(data)) return; // nothing new
+    data = shaped;
+    lastSaved = deepCopy(data);
+    fullRerenderAfterRemoteUpdate();
+    if(!SPECTATOR_MODE) setSyncPill('ok', 'Ažurirano s drugog uređaja');
+  }
+
+  function applyDeferredIfIdle(){
+    if(!deferredSnapshot || hasUnsavedChanges || saveTimer || archiveMode) return;
+    const active = document.activeElement;
+    if(active && (active.tagName==='INPUT' || active.tagName==='SELECT' || active.tagName==='TEXTAREA')) return;
+    applyRemoteSnapshot(deferredSnapshot);
+  }
+  document.addEventListener('focusout', ()=> setTimeout(applyDeferredIfIdle, 400));
 
   function withTimeout(promise, ms, label){
     let timer;
@@ -718,43 +778,135 @@ body.archive-mode #tab-pravila textarea{
     return Promise.race([promise, timeout]).finally(()=> clearTimeout(timer));
   }
 
-  async function loadData(){
-    setSyncPill('', 'Učitavanje…');
+  // Čita dokument: prvo s poslužitelja, ako ne uspije — iz lokalne kopije na uređaju.
+  async function readDoc(ref){
     try{
-      let editionKey = await withTimeout(getMetaPointer(), 7000, 'čitanje pokazivača');
-      let snap;
-      if(editionKey){
-        snap = await withTimeout(db.collection(COLLECTION).doc(editionKey).get(), 7000, 'čitanje izdanja');
-      }
-      if(!editionKey || !snap || !snap.exists){
-        // first run ever — create an initial edition document
-        data = normalizeData({});
-        editionKey = sanitizeEditionKey(data.config.eventEdition);
-        await withTimeout(db.collection(COLLECTION).doc(editionKey).set(data), 7000, 'stvaranje izdanja');
-        await withTimeout(setMetaPointer(editionKey), 7000, 'spremanje pokazivača');
-      } else {
-        data = normalizeData(snap.data());
-      }
-      currentEditionKey = editionKey;
-      syncAllResultsShape();
-      attachListener(currentEditionKey);
-      setSyncPill('ok', 'Povezano s bazom podataka');
+      return { snap: await withTimeout(ref.get(), 7000, 'čitanje'), cache: false };
     } catch(e){
-      console.error('[skokovi-u-cilj] loadData error/timeout:', e);
-      data = normalizeData({});
-      currentEditionKey = sanitizeEditionKey('');
-      setSyncPill('err', 'Nema veze s bazom — radite lokalno dok se veza ne uspostavi');
+      try{ return { snap: await ref.get({ source: 'cache' }), cache: true }; }
+      catch(e2){ throw e; }
     }
   }
 
-  async function saveData(){
-    if(archiveMode || SPECTATOR_MODE) return; // never write while viewing an archived edition
+  function scheduleLoadRetry(){
+    clearTimeout(loadRetryTimer);
+    loadRetryTimer = setTimeout(async ()=>{
+      if(dbLoaded || archiveMode) return;
+      await loadData();
+      if(dbLoaded){ fullRerenderAfterRemoteUpdate(); renderTeamsList(); renderResultsTab(); renderRangTab(); }
+    }, 12000);
+  }
+
+  async function loadData(){
+    setSyncPill('', 'Učitavanje…');
     try{
-      await db.collection(COLLECTION).doc(currentEditionKey).set(data);
-      hasUnsavedChanges = false;
-      setSyncPill('ok', 'Spremljeno u bazu podataka');
+      const metaRes = await readDoc(db.collection(COLLECTION).doc(META_DOC_ID));
+      let editionKey = metaRes.snap.exists ? metaRes.snap.data().currentEdition : null;
+      let snap = null, fromCache = metaRes.cache;
+      if(editionKey){
+        const d = await readDoc(db.collection(COLLECTION).doc(editionKey));
+        snap = d.snap; fromCache = fromCache || d.cache;
+      }
+      if(!editionKey || !snap || !snap.exists){
+        if(canEdit() && !fromCache){
+          // prvo pokretanje — stvori početno izdanje
+          data = normalizeData({});
+          editionKey = sanitizeEditionKey(data.config.eventEdition);
+          await withTimeout(db.collection(COLLECTION).doc(editionKey).set(data), 7000, 'stvaranje izdanja');
+          await withTimeout(setMetaPointer(editionKey), 7000, 'spremanje pokazivača');
+          currentEditionKey = editionKey;
+          lastSaved = deepCopy(data);
+          dbLoaded = true;
+          attachListener(currentEditionKey);
+          setSyncPill('ok', 'Povezano s bazom podataka');
+          return;
+        }
+        data = normalizeData({});
+        currentEditionKey = sanitizeEditionKey('');
+        lastSaved = null;
+        dbLoaded = false;
+        setSyncPill('err', canEdit() ? 'Nema podataka u bazi' : 'Prijavite se za uređivanje');
+        return;
+      }
+      data = normalizeData(snap.data());
+      currentEditionKey = editionKey;
+      syncAllResultsShape();
+      lastSaved = deepCopy(data);
+      dbLoaded = true;
+      attachListener(currentEditionKey);
+      setSyncPill(fromCache ? 'warn' : 'ok', fromCache ? 'Bez veze — prikaz podataka s uređaja' : 'Povezano s bazom podataka');
     } catch(e){
-      setSyncPill('err', 'Nije spremljeno — provjerite internetsku vezu');
+      console.error('[skokovi-u-cilj] loadData error:', e);
+      data = normalizeData({});
+      currentEditionKey = sanitizeEditionKey('');
+      lastSaved = null;
+      dbLoaded = false;
+      setSyncPill('err', 'Podaci nisu učitani — spremanje je isključeno dok se veza ne uspostavi');
+      scheduleLoadRetry();
+    }
+  }
+
+  function cleanForDb(v){ return JSON.parse(JSON.stringify(v === undefined ? null : v)); }
+
+  // Sastavlja samo promijenjena polja (da dva uređaja ne prepisuju jedan drugog).
+  function buildUpdateArgs(){
+    if(!lastSaved) return { full: true };
+    const args = [];
+    ['config','teams','rules'].forEach(k=>{
+      if(stable(data[k]) !== stable(lastSaved[k])) args.push(k, cleanForDb(data[k]));
+    });
+    const ids = new Set(Object.keys(data.results||{}).concat(Object.keys(lastSaved.results||{})));
+    ids.forEach(id=>{
+      const a = (data.results||{})[id], b = (lastSaved.results||{})[id];
+      if(stable(a) !== stable(b)){
+        args.push(new firebase.firestore.FieldPath('results', id), a === undefined ? firebase.firestore.FieldValue.delete() : cleanForDb(a));
+      }
+    });
+    return args.length ? { full: false, args } : null;
+  }
+
+  async function saveData(){
+    if(archiveMode || SPECTATOR_MODE) return;
+    if(!canEdit()){ setSyncPill('err', 'Niste prijavljeni — promjene se ne spremaju'); return; }
+    if(!dbLoaded){ setSyncPill('err', 'Podaci nisu učitani — spremanje je isključeno'); return; }
+    const ops = buildUpdateArgs();
+    if(ops === null){ hasUnsavedChanges = false; return; }
+    const ref = db.collection(COLLECTION).doc(currentEditionKey);
+    const snapshotOfData = deepCopy(data);
+    setSyncPill('', 'Spremanje…');
+    let p;
+    try{
+      p = ops.full ? ref.set(cleanForDb(data)) : ref.update.apply(ref, ops.args);
+      p.catch(()=>{});
+      pendingSync = true;
+      await withTimeout(p, 6000, 'spremanje');
+      pendingSync = false;
+      lastSaved = snapshotOfData;
+      hasUnsavedChanges = false;
+      saveBackup();
+      setSyncPill('ok', 'Spremljeno u bazu podataka');
+      setTimeout(applyDeferredIfIdle, 300);
+    } catch(e){
+      const msg = (e && e.message) || '';
+      if(msg.indexOf('Vrijeme isteklo') === 0){
+        // nema veze: SDK čuva upis na uređaju i šalje ga kad se veza vrati
+        lastSaved = snapshotOfData;
+        hasUnsavedChanges = false;
+        saveBackup();
+        setSyncPill('warn', 'Bez veze — promjene su spremljene na uređaju i poslat će se čim se veza vrati');
+      } else if(e && e.code === 'not-found' && !ops.full){
+        try{
+          await withTimeout(ref.set(cleanForDb(data)), 6000, 'spremanje');
+          lastSaved = snapshotOfData; hasUnsavedChanges = false; saveBackup();
+          setSyncPill('ok', 'Spremljeno u bazu podataka');
+        } catch(e2){ setSyncPill('err', 'Nije spremljeno — provjerite internetsku vezu'); }
+      } else if(e && e.code === 'permission-denied'){
+        pendingSync = false;
+        setSyncPill('err', 'Nemate dopuštenje za spremanje — prijavite se kao administrator');
+      } else {
+        pendingSync = false;
+        setSyncPill('err', 'Nije spremljeno — provjerite internetsku vezu');
+      }
     }
   }
 
@@ -801,6 +953,7 @@ body.archive-mode #tab-pravila textarea{
       data = normalizeData(existing.data());
       currentEditionKey = newKey;
       syncAllResultsShape();
+      lastSaved = deepCopy(data);
       await setMetaPointer(currentEditionKey);
       attachListener(currentEditionKey);
       fullRerenderAfterRemoteUpdate();
@@ -820,7 +973,8 @@ body.archive-mode #tab-pravila textarea{
     data.config.numJumps = preservedNumJumps;
     data.config.eventEdition = newEditionLabel;
     currentEditionKey = newKey;
-    await db.collection(COLLECTION).doc(currentEditionKey).set(data);
+    await db.collection(COLLECTION).doc(currentEditionKey).set(cleanForDb(data));
+    lastSaved = deepCopy(data);
     await setMetaPointer(currentEditionKey);
     attachListener(currentEditionKey);
     fullRerenderAfterRemoteUpdate();
@@ -863,6 +1017,139 @@ body.archive-mode #tab-pravila textarea{
     resetTeamForm(); renderTeamsList(); renderResultsTab(); renderRangTab();
   }
 
+  // ---------------- Prijava ----------------
+  function applyLockState(){
+    if(SPECTATOR_MODE) return;
+    const locked = !canEdit();
+    document.body.classList.toggle('locked', locked);
+    document.querySelectorAll('.lockable').forEach(el=>{ try{ el.inert = locked; } catch(e){} });
+    const bar = document.getElementById('authBar');
+    const text = document.getElementById('authBarText');
+    const btn = document.getElementById('authBtn');
+    bar.style.display = '';
+    if(!currentUser){
+      bar.className = 'auth-bar no-print';
+      text.textContent = 'Pregled je samo za čitanje. Za uređivanje se prijavite (samo administrator).';
+      btn.textContent = 'Prijava Googleom';
+    } else if(!canEdit()){
+      bar.className = 'auth-bar no-print';
+      text.textContent = 'Račun ' + (currentUser.email||'') + ' nema pravo uređivanja.';
+      btn.textContent = 'Odjava';
+    } else {
+      bar.className = 'auth-bar ok no-print';
+      text.textContent = 'Prijavljeni ste kao ' + currentUser.email + '.';
+      btn.textContent = 'Odjava';
+    }
+  }
+
+  function initAuth(){
+    if(SPECTATOR_MODE) return;
+    document.getElementById('authBtn').addEventListener('click', async ()=>{
+      try{
+        if(currentUser){ await auth.signOut(); return; }
+        await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+      } catch(e){
+        if(e && e.code === 'auth/popup-closed-by-user') return;
+        if(e && e.code === 'auth/unauthorized-domain') alert('Ova adresa nije dodana u Firebase (Authentication → Settings → Authorized domains).');
+        else if(e && e.code === 'auth/operation-not-allowed') alert('Prijava Googleom nije uključena u Firebase (Authentication → Sign-in method).');
+        else alert('Prijava nije uspjela: ' + ((e && e.message) || e));
+      }
+    });
+    auth.onAuthStateChanged(async user=>{
+      currentUser = user;
+      applyLockState();
+      if(canEdit() && !dbLoaded && !archiveMode){
+        await loadData();
+        fullRerenderAfterRemoteUpdate();
+        resetTeamForm(); renderTeamsList(); renderResultsTab(); renderRangTab();
+      }
+    });
+    applyLockState();
+  }
+
+  // ---------------- Sigurnosna kopija i povijest ----------------
+  function historyKey(){ return 'apk-history-' + (currentEditionKey || 'default'); }
+  function readHistory(){
+    try{ return JSON.parse(localStorage.getItem(historyKey()) || '[]'); } catch(e){ return []; }
+  }
+  function saveBackup(){
+    try{
+      if(!data || !dbLoaded) return;
+      const list = readHistory();
+      const now = Date.now();
+      if(list.length && now - list[0].t < 90000) return; // najviše jedan zapis u 90 s
+      list.unshift({ t: now, json: stable(data) });
+      while(list.length > 15) list.pop();
+      for(;;){
+        try{ localStorage.setItem(historyKey(), JSON.stringify(list)); break; }
+        catch(e){ if(list.length <= 1) break; list.pop(); }
+      }
+      renderHistory();
+    } catch(e){ /* povijest je dodatak — nikad ne smije smetati */ }
+  }
+  function renderHistory(){
+    const el = document.getElementById('historyList');
+    if(!el) return;
+    const list = readHistory();
+    if(!list.length){ el.innerHTML = '<div class="hint">Još nema spremanja.</div>'; return; }
+    el.innerHTML = '';
+    list.forEach((item, i)=>{
+      let info = '';
+      try{ const d = JSON.parse(item.json); info = (d.teams||[]).length + ' ekipa'; } catch(e){}
+      const div = document.createElement('div');
+      div.className = 'hist-item';
+      div.innerHTML = '<span>'+new Date(item.t).toLocaleString('hr-HR')+' · '+info+'</span><button class="btn-icon" type="button">Vrati</button>';
+      div.querySelector('button').addEventListener('click', ()=> restoreFromJson(item.json, 'ovo spremanje'));
+      el.appendChild(div);
+    });
+  }
+
+  async function restoreFromJson(jsonText, label){
+    if(!canEdit()){ alert('Za vraćanje podataka prijavite se kao administrator.'); return; }
+    if(!dbLoaded){ alert('Podaci nisu učitani iz baze — pričekajte vezu pa pokušajte ponovno.'); return; }
+    let parsed;
+    try{ parsed = JSON.parse(jsonText); } catch(e){ alert('Datoteka nije ispravna.'); return; }
+    if(!parsed || !Array.isArray(parsed.teams) || !parsed.config){ alert('Datoteka nema ispravan oblik podataka natjecanja.'); return; }
+    if(!confirm('Zamijeniti trenutne podatke natjecanja podacima iz: '+label+'? Trenutno stanje bit će prepisano.')) return;
+    // Prije zamjene sačuvaj trenutno stanje u povijest.
+    try{ const list = readHistory(); list.unshift({ t: Date.now(), json: stable(data) }); while(list.length>15) list.pop(); localStorage.setItem(historyKey(), JSON.stringify(list)); } catch(e){}
+    data = normalizeData(parsed);
+    syncAllResultsShape();
+    try{
+      await withTimeout(db.collection(COLLECTION).doc(currentEditionKey).set(cleanForDb(data)), 7000, 'vraćanje');
+      lastSaved = deepCopy(data);
+      hasUnsavedChanges = false;
+      setSyncPill('ok', 'Podaci vraćeni i spremljeni');
+    } catch(e){
+      setSyncPill('err', 'Vraćeno lokalno, ali nije spremljeno u bazu');
+    }
+    fullRerenderAfterRemoteUpdate();
+    resetTeamForm(); renderTeamsList(); renderResultsTab(); renderRangTab(); renderHistory();
+  }
+
+  function initBackup(){
+    document.getElementById('backupDownloadBtn').addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
+      const a = document.createElement('a');
+      const d = new Date();
+      const pad = n => String(n).padStart(2,'0');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'apk-' + (currentEditionKey||'natjecanje') + '-' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes()) + '.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=> URL.revokeObjectURL(a.href), 2000);
+    });
+    const fileInput = document.getElementById('backupFileInput');
+    document.getElementById('backupUploadBtn').addEventListener('click', ()=> fileInput.click());
+    fileInput.addEventListener('change', ()=>{
+      const f = fileInput.files && fileInput.files[0];
+      if(!f) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{ restoreFromJson(String(reader.result), 'datoteke ' + f.name); fileInput.value = ''; };
+      reader.readAsText(f);
+    });
+    renderHistory();
+  }
+
   // ---------------- Tabs ----------------
   function initTabs(){
     document.querySelectorAll('.tab-btn').forEach(btn=>{
@@ -876,6 +1163,7 @@ body.archive-mode #tab-pravila textarea{
         if(btn.dataset.tab === 'pravila') renderPravilaTab();
         if(btn.dataset.tab === 'ispis') renderIspisTab();
         if(btn.dataset.tab === 'info') renderInfoTab();
+        if(btn.dataset.tab === 'arhiva') renderHistory();
       });
     });
   }
@@ -978,12 +1266,12 @@ body.archive-mode #tab-pravila textarea{
 
   // ---------------- Ekipe tab ----------------
   function buildMembersGrid(existingComps){
-    console.log('[skokovi-u-cilj] buildMembersGrid called, existingComps=', existingComps);
+    
     const grid = document.getElementById('membersGrid');
-    console.log('[skokovi-u-cilj] grid element found:', grid);
+    
     grid.innerHTML = '';
     const showAlkarski = roundsAvailable();
-    console.log('[skokovi-u-cilj] showAlkarski=', showAlkarski);
+    
     LETTERS.forEach((letter, idx)=>{
       const existing = existingComps && existingComps[idx];
       const val = existing ? existing.ime : '';
@@ -1004,7 +1292,7 @@ body.archive-mode #tab-pravila textarea{
         '</label>';
       grid.appendChild(div);
     });
-    console.log('[skokovi-u-cilj] buildMembersGrid finished, grid.children.length=', grid.children.length);
+    
   }
 
   function ccBadge(cc){ return cc ? '<span class="cc-badge">'+escapeHtml(cc)+'</span>' : ''; }
@@ -1745,20 +2033,18 @@ body.archive-mode #tab-pravila textarea{
   }
 
   async function init(){
-    console.log('[skokovi-u-cilj] init: start');
 
     // Set up a temporary local dataset immediately so the UI (tabs, team form) is usable
     // right away, even if the database connection is slow, hanging, or unreachable.
     data = normalizeData({});
     currentEditionKey = sanitizeEditionKey('');
 
-    try{ initTabs(); console.log('[skokovi-u-cilj] initTabs OK'); } catch(err){ console.error('[skokovi-u-cilj] initTabs FAILED', err); showFatalError('initTabs', err); return; }
-    try{ initSettings(); console.log('[skokovi-u-cilj] initSettings OK'); } catch(err){ console.error('[skokovi-u-cilj] initSettings FAILED', err); showFatalError('initSettings', err); return; }
-    try{ resetTeamForm(); console.log('[skokovi-u-cilj] resetTeamForm OK, membersGrid children=', document.getElementById('membersGrid').children.length); } catch(err){ console.error('[skokovi-u-cilj] resetTeamForm FAILED', err); showFatalError('resetTeamForm', err); return; }
-    try{ renderTeamsList(); console.log('[skokovi-u-cilj] renderTeamsList OK'); } catch(err){ console.error('[skokovi-u-cilj] renderTeamsList FAILED', err); showFatalError('renderTeamsList', err); return; }
-    try{ populateTeamSelect(); console.log('[skokovi-u-cilj] populateTeamSelect OK'); } catch(err){ console.error('[skokovi-u-cilj] populateTeamSelect FAILED', err); showFatalError('populateTeamSelect', err); return; }
-    try{ setupPublicLinkCard(); console.log('[skokovi-u-cilj] setupPublicLinkCard OK'); } catch(err){ console.error('[skokovi-u-cilj] setupPublicLinkCard FAILED', err); showFatalError('setupPublicLinkCard', err); return; }
-    console.log('[skokovi-u-cilj] UI ready (before database), membersGrid children=', document.getElementById('membersGrid').children.length);
+    try{ initTabs();  } catch(err){ console.error('[skokovi-u-cilj] initTabs FAILED', err); showFatalError('initTabs', err); return; }
+    try{ initSettings();  } catch(err){ console.error('[skokovi-u-cilj] initSettings FAILED', err); showFatalError('initSettings', err); return; }
+    try{ resetTeamForm();  } catch(err){ console.error('[skokovi-u-cilj] resetTeamForm FAILED', err); showFatalError('resetTeamForm', err); return; }
+    try{ renderTeamsList();  } catch(err){ console.error('[skokovi-u-cilj] renderTeamsList FAILED', err); showFatalError('renderTeamsList', err); return; }
+    try{ populateTeamSelect();  } catch(err){ console.error('[skokovi-u-cilj] populateTeamSelect FAILED', err); showFatalError('populateTeamSelect', err); return; }
+    try{ setupPublicLinkCard();  } catch(err){ console.error('[skokovi-u-cilj] setupPublicLinkCard FAILED', err); showFatalError('setupPublicLinkCard', err); return; }
 
     if(SPECTATOR_MODE){
       document.body.classList.add('spectator-mode');
@@ -1780,6 +2066,8 @@ body.archive-mode #tab-pravila textarea{
     document.getElementById('rangRoundSelect').addEventListener('change', renderRangTab);
     document.getElementById('rangPrintRound').addEventListener('change', renderIspisTab);
     document.getElementById('printBtn').addEventListener('click', ()=> window.print());
+    initBackup();
+    initAuth();
 
     const rulesTextarea = document.getElementById('rulesTextarea');
     rulesTextarea.value = data.rules || '';
@@ -1818,9 +2106,9 @@ body.archive-mode #tab-pravila textarea{
 
     // Now connect to the database in the background. The UI above is already
     // usable regardless of how this turns out; when/if it resolves, refresh the view.
-    console.log('[skokovi-u-cilj] connecting to database in background…');
+    
     loadData().then(()=>{
-      console.log('[skokovi-u-cilj] background loadData finished, data=', data);
+      
       fullRerenderAfterRemoteUpdate();
       if(!document.getElementById('editingTeamId').value) resetTeamForm();
     }).catch(err=>{
