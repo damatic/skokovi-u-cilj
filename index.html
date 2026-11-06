@@ -272,8 +272,8 @@ body.spectator-mode #publicLinkCard{display:none !important;}
 body.spectator-mode #buildTag{display:none;}
 body.spectator-mode .sync-pill{display:none;}
 body.spectator-mode #rangRoundRow + #rangStats{margin-top:0;}
-@media (max-width:679px){ .app-header{padding:14px 16px; gap:12px;} .app-header .target-logo svg{width:40px; height:40px;} }
-@media (max-width:679px){ body.spectator-mode #tab-rang .hint:first-of-type{display:none;} }
+@media (max-width:519px){ .app-header{padding:14px 16px; gap:12px;} .app-header .target-logo svg{width:40px; height:40px;} }
+@media (max-width:519px){ body.spectator-mode #tab-rang .hint:first-of-type{display:none;} }
 body.spectator-mode #rulesTextarea, body.spectator-mode #rulesAutosaveNote, body.spectator-mode #rulesAdminHint{display:none;}
 #rulesReadonly{display:none; white-space:pre-wrap; font-size:14.5px; line-height:1.6;}
 body.spectator-mode #rulesReadonly{display:block;}
@@ -288,12 +288,16 @@ body.spectator-mode #rulesReadonly{display:block;}
 .stat-box span{font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.04em;}
 .info-list{display:grid; grid-template-columns:110px 1fr; gap:10px 14px; font-size:14.5px;}
 .info-list dt{color:var(--ink-dim);}
-@media (max-width:679px){
-  table.rank-table .hide-narrow, table.rank-table th.jump-head, table.rank-table td.jump-cell,
-  table.team-rank-table .hide-narrow{display:none;}
+@media (max-width:899px){
+  table.rank-table .hide-narrow, table.team-rank-table .hide-narrow{display:none;}
   .club-sub{display:block;}
+  table.rank-table th, table.rank-table td, table.team-rank-table th, table.team-rank-table td{padding:8px 5px;}
+  table.rank-table td.jump-cell{width:auto; min-width:0; padding:6px 2px;}
+  table.rank-table td.result-cell{width:auto;}
+}
+@media (max-width:519px){
+  table.rank-table th.jump-head, table.rank-table td.jump-cell{display:none;}
   .rot-hint{display:block;}
-  table.rank-table th, table.rank-table td, table.team-rank-table th, table.team-rank-table td{padding:8px 6px;}
 }
 .live-badge{
   display:inline-flex; align-items:center; gap:5px; font-size:11px; font-family:'Inter'; font-weight:700;
@@ -984,10 +988,16 @@ body.archive-mode #tab-pravila textarea{
       const existing = existingComps && existingComps[idx];
       const val = existing ? existing.ime : '';
       const alkarskiChecked = existing ? existing.alkarski !== false : true;
+      const spolVal = existing && existing.spol ? existing.spol : '';
       const div = document.createElement('div');
       div.className = 'field member-slot';
       div.innerHTML = '<label><span class="letter-badge">'+letter+'</span> Natjecatelj '+letter+'</label>'+
         '<input type="text" data-letter="'+letter+'" class="member-input" placeholder="Ime i prezime (ostavi prazno ako fali)" value="'+escapeAttr(val)+'">'+
+        '<select data-letter="'+letter+'" class="member-spol" style="margin-top:6px; padding:6px 8px; font-size:13px; max-width:160px;">'+
+          '<option value=""'+(spolVal===''?' selected':'')+'>Spol: —</option>'+
+          '<option value="M"'+(spolVal==='M'?' selected':'')+'>Muškarac</option>'+
+          '<option value="Ž"'+(spolVal==='Ž'?' selected':'')+'>Žena</option>'+
+        '</select>'+
         '<label class="member-alkarski-label" style="display:'+(showAlkarski?'flex':'none')+';">'+
           '<input type="checkbox" data-letter="'+letter+'" class="member-alkarski-checkbox" '+(alkarskiChecked?'checked':'')+'>'+
           'Bara/Čoja/Alka'+
@@ -1061,10 +1071,12 @@ body.archive-mode #tab-pravila textarea{
 
     const inputs = Array.from(document.querySelectorAll('.member-input'));
     const alkarskiChecks = Array.from(document.querySelectorAll('.member-alkarski-checkbox'));
+    const spolSelects = Array.from(document.querySelectorAll('.member-spol'));
     const competitors = LETTERS.map((letter)=>{
       const inp = inputs.find(i=>i.dataset.letter===letter);
       const chk = alkarskiChecks.find(i=>i.dataset.letter===letter);
-      return { letter, ime: inp ? inp.value.trim() : '', alkarski: chk ? chk.checked : true };
+      const sp = spolSelects.find(i=>i.dataset.letter===letter);
+      return { letter, ime: inp ? inp.value.trim() : '', alkarski: chk ? chk.checked : true, spol: sp ? sp.value : '' };
     });
     if(competitors.every(c=>!c.ime)){ alert('Unesite barem jednog natjecatelja.'); return; }
 
@@ -1114,7 +1126,7 @@ body.archive-mode #tab-pravila textarea{
       const div = document.createElement('div');
       div.className = 'team-card';
       const membersHtml = team.competitors.map(c=>{
-        const label = c.letter + ' — ' + (c.ime && c.ime.trim() ? escapeHtml(c.ime) : 'prazno');
+        const label = c.letter + ' — ' + (c.ime && c.ime.trim() ? escapeHtml(c.ime) + (c.spol ? ' ('+c.spol+')' : '') : 'prazno');
         const excluded = roundsAvailable() && !isMissing(c) && c.alkarski === false;
         return '<span class="chip'+(isMissing(c)?' missing':'')+'">'+label+(excluded ? ' <span style="color:var(--danger); font-weight:600;">✕B/Č/A</span>' : '')+'</span>';
       }).join('');
@@ -1371,12 +1383,13 @@ body.archive-mode #tab-pravila textarea{
     return { ranked, notStarted };
   }
 
-  function buildGroupIndividualStandings(startIdx, endIdx, onlySubRoundCompetitors){
+  function buildGroupIndividualStandings(startIdx, endIdx, onlySubRoundCompetitors, spolFilter){
     const n = data.config.numJumps;
     const list = [];
     data.teams.forEach(team=>{
       team.competitors.forEach(comp=>{
         if(!competitorEligible(comp, onlySubRoundCompetitors)) return;
+        if(spolFilter && (isMissing(comp) || comp.spol !== spolFilter)) return;
         const missing = isMissing(comp);
         const id = competitorId(team.number, comp.letter);
         const arr = data.results[id] || [];
@@ -1433,21 +1446,23 @@ body.archive-mode #tab-pravila textarea{
   function renderRoundSectionHtml(group, part){
     part = part || 'both';
     const showInd = part !== 'tim';
-    const showTeam = !group.isSubRound && part !== 'ind';
+    const showTeam = !group.isSubRound && part === 'both' || (!group.isSubRound && part === 'tim');
     const n = data.config.numJumps;
     const labels = jumpLabels(n).slice(group.startIdx, group.endIdx+1);
     const totalJumpsInGroup = group.endIdx - group.startIdx + 1;
 
-    const indivAll = buildGroupIndividualStandings(group.startIdx, group.endIdx, group.isSubRound);
+    const spolFilter = part === 'indM' ? 'M' : part === 'indZ' ? 'Ž' : null;
+    const spolLabel = spolFilter === 'M' ? 'muškarci' : spolFilter === 'Ž' ? 'žene' : 'pojedinačno';
+    const indivAll = buildGroupIndividualStandings(group.startIdx, group.endIdx, group.isSubRound, spolFilter);
     const { ranked: indivRanked, notStarted } = rankList(indivAll);
 
     let html = '<div class="incomplete-banner">Poredak je prikazan na temelju trenutno upisanih skokova i mijenja se uživo. "Upisano" pokazuje koliko je od ukupno '+totalJumpsInGroup+' skokova ('+group.label+') evidentirano.'+(group.isSubRound ? ' Natjecatelji označeni kao izvan Bara/Čoja/Alka ovdje se ne prikazuju (i dalje broje u Ukupno).' : '')+'</div>';
 
-    if(showInd) html += '<h3 class="section-subtitle">'+group.label+' — pojedinačno</h3>';
+    if(showInd) html += '<h3 class="section-subtitle">'+group.label+' — '+spolLabel+'</h3>';
     if(!showInd){
       /* samo ekipni prikaz */
     } else if(indivRanked.length===0){
-      html += '<div class="empty-state">Još nema unesenih rezultata za ovaj naslov.</div>';
+      html += '<div class="empty-state">'+(spolFilter ? 'Nema natjecatelja s oznakom spola u ovoj kategoriji. Spol se označava u tabu "Ekipe i postavke" kod svakog natjecatelja.' : 'Još nema unesenih rezultata za ovaj naslov.')+'</div>';
     } else {
       html += '<div class="rank-table-wrap"><table class="rank-table"><thead><tr><th>Mjesto</th><th class="hide-narrow">Br.</th><th>Ime i prezime</th><th class="hide-narrow">Klub</th>';
       labels.forEach(l=> html += '<th class="jump-head">'+l+'</th>');
@@ -1514,7 +1529,7 @@ body.archive-mode #tab-pravila textarea{
   function renderRangTab(){
     const holder = document.getElementById('rangContent');
     const roundSelect = document.getElementById('rangRoundSelect');
-    const opts = [['tim','Ukupno — ekipe'],['ind','Ukupno — pojedinačno']];
+    const opts = [['tim','Ukupno — ekipe'],['ind','Ukupno — pojedinačno'],['indM','Ukupno — muškarci'],['indZ','Ukupno — žene']];
     if(roundsAvailable()) opts.push(['bara','Bara (I–III)'],['coja','Čoja (IV–VI)'],['alka','Alka (VII–IX)']);
     if(roundSelect.options.length !== opts.length){
       const prev = roundSelect.value;
@@ -1530,8 +1545,9 @@ body.archive-mode #tab-pravila textarea{
     }
     statsHolder.innerHTML = buildStatsHtml();
     const v = roundSelect.value;
-    const group = getRoundGroup(v==='tim' || v==='ind' ? 'ukupno' : v);
-    holder.innerHTML = renderRoundSectionHtml(group, v==='tim' ? 'tim' : v==='ind' ? 'ind' : 'both');
+    const isTotal = ['tim','ind','indM','indZ'].indexOf(v) >= 0;
+    const group = getRoundGroup(isTotal ? 'ukupno' : v);
+    holder.innerHTML = renderRoundSectionHtml(group, isTotal ? v : 'both');
   }
 
   function renderInfoTab(){
