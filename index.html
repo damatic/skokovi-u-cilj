@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>Skokovi u cilj — Tablica rezultata</title>
+<title>Alkarski Padobranski Kup — Rezultati</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.17.1/firebase-app-compat.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.17.1/firebase-firestore-compat.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@500;700&display=swap');
 
 :root{
   --navy-900:#0B2138;
   --navy-800:#132C46;
   --navy-700:#1B3B5C;
-  --orange:#E8590C;
-  --orange-dark:#C24705;
+  --orange:#C8151B;
+  --orange-dark:#9C1015;
   --gold:#D4A017;
   --paper:#F7F5EF;
   --paper-dim:#EFEBE1;
@@ -38,7 +38,8 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 h1,h2,h3,.display{
-  font-family:'Oswald',sans-serif;
+  font-family:'Big Shoulders',sans-serif;
+  font-weight:700;
   letter-spacing:.02em;
   text-transform:uppercase;
   margin:0;
@@ -78,7 +79,7 @@ h1,h2,h3,.display{
   display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;
 }
 .tab-btn{
-  font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.03em;
+  font-family:'Big Shoulders',sans-serif; text-transform:uppercase; letter-spacing:.03em;
   font-size:14px; font-weight:600; color:var(--ink-dim);
   background:var(--white); border:2px solid var(--line); border-radius:999px;
   padding:10px 18px; cursor:pointer; transition:all .15s ease;
@@ -117,7 +118,7 @@ h1,h2,h3,.display{
 .rules-print-text{white-space:pre-wrap; font-family:'Inter'; font-size:13.5px; line-height:1.7; color:var(--ink);}
 
 button.btn{
-  font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.03em; font-weight:600;
+  font-family:'Big Shoulders',sans-serif; text-transform:uppercase; letter-spacing:.03em; font-weight:600;
   font-size:13.5px; border-radius:7px; border:none; padding:11px 20px; cursor:pointer;
   background:var(--orange); color:var(--white); transition:background .15s ease;
 }
@@ -149,7 +150,7 @@ button.btn-icon.danger{color:var(--danger); border-color:#E7C3BD;}
   display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
 }
 .team-card .info{flex:1 1 320px; min-width:0;}
-.team-card .team-name{font-family:'Oswald'; font-size:15.5px; color:var(--navy-800); text-transform:uppercase;}
+.team-card .team-name{font-family:'Big Shoulders'; font-size:15.5px; color:var(--navy-800); text-transform:uppercase;}
 .team-card .team-name .num{color:var(--orange); font-family:'Roboto Mono';}
 .team-card .members{font-size:13px; color:var(--ink-dim); margin-top:4px; display:flex; gap:8px; flex-wrap:wrap;}
 .chip{
@@ -165,7 +166,7 @@ table.results-table th, table.results-table td{
   border:1px solid var(--line); padding:6px 7px; text-align:center; font-size:13px;
 }
 table.results-table thead th{
-  background:var(--navy-800); color:var(--white); font-family:'Oswald'; text-transform:uppercase; font-size:12px; letter-spacing:.02em;
+  background:var(--navy-800); color:var(--white); font-family:'Big Shoulders'; text-transform:uppercase; font-size:12px; letter-spacing:.02em;
 }
 table.results-table td.competitor-name{
   text-align:left; font-family:'Inter'; font-weight:600; background:var(--paper-dim); white-space:nowrap; min-width:150px;
@@ -189,9 +190,13 @@ tr.missing-row td.competitor-name::after{
 table.rank-table{border-collapse:collapse; width:100%;}
 table.rank-table th, table.rank-table td{border:1px solid var(--line); padding:9px 10px; font-size:14px;}
 table.rank-table thead th{
-  background:var(--navy-800); color:var(--white); font-family:'Oswald'; text-transform:uppercase; font-size:12.5px; text-align:left;
+  background:var(--navy-800); color:var(--white); font-family:'Big Shoulders'; text-transform:uppercase; font-size:12.5px; text-align:left;
 }
 table.rank-table td.place{font-family:'Roboto Mono'; font-weight:700; text-align:center; width:50px;}
+.alka-badge-wrap{display:inline-flex; align-items:center; gap:5px;}
+.alka-badge-svg{flex-shrink:0;}
+.alka-badge-num{font-family:'Roboto Mono'; font-weight:700;}
+.place-plain{font-family:'Roboto Mono'; font-weight:700;}
 table.rank-table td.num{font-family:'Roboto Mono'; text-align:center; width:60px;}
 table.rank-table td.result-cell{font-family:'Roboto Mono'; text-align:center; width:130px; line-height:1.35;}
 table.rank-table td.result-cell .pts-big{font-size:17px; font-weight:700; color:var(--navy-800);}
@@ -205,7 +210,8 @@ table.rank-table td.progress{font-family:'Roboto Mono'; text-align:center; width
 table.rank-table td.progress.full{color:var(--good); font-weight:700;}
 table.rank-table td.jump-cell{font-family:'Roboto Mono'; text-align:center; width:52px; font-size:11.5px; line-height:1.4; padding:6px 4px; color:var(--ink-dim); border-left:1px dashed var(--line);}
 table.rank-table td.jump-cell .jp{font-weight:700; color:var(--ink);}
-table.rank-table td.jump-cell .jc{display:block; font-size:10px;}
+table.rank-table td.jump-cell .jc{display:block; font-size:10px; white-space:nowrap;}
+table.rank-table td.name-col, table.rank-table td:nth-child(3){min-width:150px;}
 table.rank-table td.jump-cell.empty{color:#C9C2B0;}
 table.rank-table th.jump-head{font-size:10.5px !important; text-align:center !important; border-left:1px dashed rgba(255,255,255,.25);}
 .rank-table-wrap{overflow-x:auto;}
@@ -214,10 +220,10 @@ table.rank-table th.jump-head{font-size:10.5px !important; text-align:center !im
 }
 table.team-rank-table{border-collapse:collapse; width:100%; margin-top:10px;}
 table.team-rank-table th, table.team-rank-table td{border:1px solid var(--line); padding:9px 10px; font-size:14px;}
-table.team-rank-table thead th{background:var(--navy-700); color:var(--white); font-family:'Oswald'; text-transform:uppercase; font-size:12.5px; text-align:left;}
+table.team-rank-table thead th{background:var(--navy-700); color:var(--white); font-family:'Big Shoulders'; text-transform:uppercase; font-size:12.5px; text-align:left;}
 table.team-rank-table td.place{font-family:'Roboto Mono'; font-weight:700; text-align:center; width:50px;}
 table.team-rank-table td.num{font-family:'Roboto Mono'; text-align:center; width:60px;}
-.section-subtitle{font-family:'Oswald'; text-transform:uppercase; font-size:14px; color:var(--navy-800); margin:22px 0 8px;}
+.section-subtitle{font-family:'Big Shoulders'; text-transform:uppercase; font-size:14px; color:var(--navy-800); margin:22px 0 8px;}
 
 /* ---------- Print reports ---------- */
 .print-controls{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px;}
@@ -228,16 +234,16 @@ table.team-rank-table td.num{font-family:'Roboto Mono'; text-align:center; width
 
 table.sheet-table{border-collapse:collapse; width:100%; margin-bottom:26px; page-break-inside:avoid;}
 table.sheet-table th, table.sheet-table td{border:1px solid #333; padding:5px 6px; font-size:11.5px; text-align:center;}
-table.sheet-table thead th{background:#EFEBE1; font-family:'Oswald'; text-transform:uppercase; font-size:10.5px;}
+table.sheet-table thead th{background:#EFEBE1; font-family:'Big Shoulders'; text-transform:uppercase; font-size:10.5px;}
 table.sheet-table td.name-cell{text-align:left; font-weight:600; white-space:nowrap;}
 table.sheet-table .sig-row td{height:34px; font-size:9.5px; color:#555; vertical-align:bottom;}
 table.sheet-table td.small-label{font-size:9px; color:#666; text-transform:uppercase;}
-.team-block-title{font-family:'Oswald'; text-transform:uppercase; font-size:14px; color:var(--navy-800); margin:22px 0 8px; border-bottom:2px solid var(--orange); padding-bottom:4px;}
+.team-block-title{font-family:'Big Shoulders'; text-transform:uppercase; font-size:14px; color:var(--navy-800); margin:22px 0 8px; border-bottom:2px solid var(--orange); padding-bottom:4px;}
 .team-block-title:first-child{margin-top:0;}
 
 table.indiv-table{border-collapse:collapse; width:100%; margin-bottom:22px; page-break-inside:avoid;}
 table.indiv-table th, table.indiv-table td{border:1px solid #333; padding:6px 8px; font-size:12px;}
-table.indiv-table thead th{background:#132C46; color:#fff; font-family:'Oswald'; text-transform:uppercase; font-size:11px; text-align:left;}
+table.indiv-table thead th{background:#132C46; color:#fff; font-family:'Big Shoulders'; text-transform:uppercase; font-size:11px; text-align:left;}
 table.indiv-table td.jump-col{font-family:'Roboto Mono'; font-weight:700; text-align:center; width:60px;}
 table.indiv-table td.score-cell{font-family:'Roboto Mono'; text-align:center; line-height:1.5;}
 table.indiv-table td.score-cell .pts{font-weight:700;}
@@ -257,10 +263,38 @@ table.indiv-table td.rowspan-cell{vertical-align:middle; font-weight:600;}
   table.sheet-table, table.indiv-table, table.rank-table{page-break-inside:auto;}
   tr{page-break-inside:avoid;}
 }
-body.spectator-mode #mainTabs{display:none;}
-body.spectator-mode .tab-content{display:none !important;}
-body.spectator-mode #tab-rang{display:block !important;}
+body.spectator-mode .tab-btn[data-tab="ekipe"],
+body.spectator-mode .tab-btn[data-tab="rezultati"],
+body.spectator-mode .tab-btn[data-tab="ispis"],
+body.spectator-mode .tab-btn[data-tab="arhiva"]{display:none;}
+body:not(.spectator-mode) .tab-btn[data-tab="info"]{display:none;}
 body.spectator-mode #publicLinkCard{display:none !important;}
+body.spectator-mode #buildTag{display:none;}
+body.spectator-mode .sync-pill{display:none;}
+body.spectator-mode #rangRoundRow + #rangStats{margin-top:0;}
+@media (max-width:679px){ .app-header{padding:14px 16px; gap:12px;} .app-header .target-logo svg{width:40px; height:40px;} }
+@media (max-width:679px){ body.spectator-mode #tab-rang .hint:first-of-type{display:none;} }
+body.spectator-mode #rulesTextarea, body.spectator-mode #rulesAutosaveNote, body.spectator-mode #rulesAdminHint{display:none;}
+#rulesReadonly{display:none; white-space:pre-wrap; font-size:14.5px; line-height:1.6;}
+body.spectator-mode #rulesReadonly{display:block;}
+.tabs{overflow-x:auto; flex-wrap:nowrap;}
+.tab-btn{white-space:nowrap;}
+.cc-badge{display:inline-block; font-family:'Inter'; font-size:10.5px; font-weight:700; background:var(--navy-800); color:#fff; border-radius:4px; padding:1px 5px; margin-right:6px; letter-spacing:.04em; vertical-align:middle;}
+.club-sub{display:none; font-size:11.5px; color:var(--ink-dim);}
+.rot-hint{display:none; font-size:11.5px; color:var(--ink-dim); text-align:center; margin-top:8px;}
+.stats-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:8px; margin:4px 0 14px;}
+.stat-box{background:var(--paper-dim); border-radius:8px; padding:8px 10px; text-align:center;}
+.stat-box b{display:block; font-family:'Big Shoulders'; font-size:24px; color:var(--navy-800);}
+.stat-box span{font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.04em;}
+.info-list{display:grid; grid-template-columns:110px 1fr; gap:10px 14px; font-size:14.5px;}
+.info-list dt{color:var(--ink-dim);}
+@media (max-width:679px){
+  table.rank-table .hide-narrow, table.rank-table th.jump-head, table.rank-table td.jump-cell,
+  table.team-rank-table .hide-narrow{display:none;}
+  .club-sub{display:block;}
+  .rot-hint{display:block;}
+  table.rank-table th, table.rank-table td, table.team-rank-table th, table.team-rank-table td{padding:8px 6px;}
+}
 .live-badge{
   display:inline-flex; align-items:center; gap:5px; font-size:11px; font-family:'Inter'; font-weight:700;
   color:#BFE9CE; text-transform:uppercase; letter-spacing:.04em;
@@ -300,20 +334,16 @@ body.archive-mode #tab-pravila textarea{
 
   <div class="app-header">
     <div class="target-logo">
-      <svg width="60" height="46" viewBox="0 0 64 48">
-        <rect x="2" y="2" width="8" height="8" fill="#E8590C"/>
-        <rect x="10" y="2" width="8" height="8" fill="#F7F5EF"/>
-        <rect x="2" y="10" width="8" height="8" fill="#F7F5EF"/>
-        <rect x="10" y="10" width="8" height="8" fill="#E8590C"/>
-        <circle cx="44" cy="24" r="20" fill="#0B2138"/>
-        <circle cx="44" cy="24" r="20" fill="none" stroke="#E8590C" stroke-width="1.5"/>
-        <circle cx="44" cy="24" r="14" fill="none" stroke="#F7F5EF" stroke-width="1.5"/>
-        <circle cx="44" cy="24" r="8" fill="none" stroke="#E8590C" stroke-width="1.5"/>
-        <circle cx="44" cy="24" r="3" fill="#D4A017"/>
+      <svg width="52" height="52" viewBox="0 0 90 90">
+        <circle cx="45" cy="45" r="38" fill="none" stroke="#C8151B" stroke-width="7"/>
+        <circle cx="45" cy="45" r="14" fill="none" stroke="#F7F5EF" stroke-width="7"/>
+        <line x1="45" y1="7" x2="45" y2="31" stroke="#F7F5EF" stroke-width="7"/>
+        <line x1="32.9" y1="52" x2="12.1" y2="64" stroke="#F7F5EF" stroke-width="7"/>
+        <line x1="57.1" y1="52" x2="77.9" y2="64" stroke="#F7F5EF" stroke-width="7"/>
       </svg>
     </div>
     <div class="titles">
-      <h1 id="headerTitle">Skokovi u cilj — natjecateljski rezultati</h1>
+      <h1 id="headerTitle">Alkarski Padobranski Kup</h1>
       <div class="sub" id="headerSub">Ekipe, unos rezultata i rang lista</div>
       <div class="sub" id="buildTag" style="opacity:.6; font-size:10px;"></div>
     </div>
@@ -331,6 +361,8 @@ body.archive-mode #tab-pravila textarea{
     <button class="tab-btn" data-tab="rang">Rang lista</button>
     <button class="tab-btn" data-tab="pravila">Pravila natjecanja</button>
     <button class="tab-btn" data-tab="ispis">Ispis / Print</button>
+    <button class="tab-btn" data-tab="arhiva">Arhiva</button>
+    <button class="tab-btn" data-tab="info">Informacije</button>
   </div>
 
   <!-- ================= EKIPE TAB ================= -->
@@ -350,6 +382,15 @@ body.archive-mode #tab-pravila textarea{
       </div>
       <div class="hint">Ovaj naziv i redni broj prikazuju se u zaglavlju aplikacije i na ispisima. Redni broj se svake godine mijenja.</div>
       <div class="row" style="margin-top:14px;">
+        <div class="field grow"><label>Mjesto održavanja</label><input type="text" id="eventLocationInput" placeholder="npr. Aerodrom Sinj (LDSS)"></div>
+        <div class="field grow"><label>Datum</label><input type="text" id="eventDateInput" placeholder="npr. 22.–23.8.2026."></div>
+      </div>
+      <div class="row">
+        <div class="field grow"><label>Kontakt</label><input type="text" id="eventContactInput" placeholder="npr. ime.prezime@primjer.hr · 091 000 0000"></div>
+        <div class="field grow"><label>Web stranica</label><input type="text" id="eventWebInput" placeholder="npr. https://www.aeroklubsinj.hr"></div>
+      </div>
+      <div class="hint">Mjesto, datum, kontakt i web prikazuju se natjecateljima u javnom pregledu (tab "Informacije").</div>
+      <div class="row" style="margin-top:14px;">
         <div class="field small">
           <label>Broj serija skokova</label>
           <select id="numJumpsSelect">
@@ -366,13 +407,6 @@ body.archive-mode #tab-pravila textarea{
       <div class="hint">Ako smanjite broj skokova, rezultati za skokove iznad novog broja bit će trajno obrisani. Kod 9 skokova, rang lista automatski nudi i podjelu na Bara (I–III) / Čoja (IV–VI) / Alka (VII–IX).</div>
     </div>
 
-    <div class="card no-print">
-      <h2><span class="ring-dot"></span>Arhiva prošlih natjecanja</h2>
-      <div class="hint">Svako izdanje (redni broj) sprema se trajno i odvojeno. Ovdje možete pogledati stara izdanja u načinu samo za čitanje, bez rizika da nešto promijenite.</div>
-      <button class="btn secondary" id="loadArchiveBtn">Prikaži arhivu</button>
-      <div class="archive-list" id="archiveList"></div>
-    </div>
-
     <div class="ekipe-columns">
       <div class="card">
         <h2><span class="ring-dot"></span>Dodaj / uredi ekipu</h2>
@@ -386,6 +420,10 @@ body.archive-mode #tab-pravila textarea{
           <div class="field grow">
             <label>Naziv ekipe / Klub</label>
             <input type="text" id="teamName" placeholder="npr. AK Sinj">
+          </div>
+          <div class="field small" style="max-width:90px;">
+            <label>Država</label>
+            <input type="text" id="teamCountry" maxlength="3" placeholder="HR" style="text-transform:uppercase;">
           </div>
         </div>
         <div class="hint" id="teamAlkarskiHint">Kod svakog natjecatelja označite sudjeluje li u Bara/Čoja/Alka poretku — u ukupnom poretku svi natjecatelji sudjeluju bez obzira na ovu oznaku.</div>
@@ -436,17 +474,13 @@ body.archive-mode #tab-pravila textarea{
     <div class="card">
       <h2><span class="ring-dot"></span>Rang lista</h2>
       <div class="hint">Poredak: veći broj punata bolji → manji broj centimetara bolji → bolji niz pogodaka (tko ima više nula, jedinica…).</div>
-      <div class="row" id="rangRoundRow" style="display:none;">
-        <div class="field small">
-          <label>Naslov</label>
-          <select id="rangRoundSelect">
-            <option value="ukupno">Ukupno</option>
-            <option value="bara">Bara (I–III)</option>
-            <option value="coja">Čoja (IV–VI)</option>
-            <option value="alka">Alka (VII–IX)</option>
-          </select>
+      <div class="row" id="rangRoundRow">
+        <div class="field grow" style="max-width:340px;">
+          <label>Prikaz</label>
+          <select id="rangRoundSelect"></select>
         </div>
       </div>
+      <div id="rangStats"></div>
       <div id="rangContent"></div>
     </div>
   </div>
@@ -455,9 +489,28 @@ body.archive-mode #tab-pravila textarea{
   <div class="tab-content" id="tab-pravila">
     <div class="card">
       <h2><span class="ring-dot"></span>Pravila natjecanja</h2>
-      <div class="hint">Slobodan unos teksta — pravila, propozicije, napomene za suce ili natjecatelje. Sprema se automatski i može se ispisati (tab "Ispis / Print").</div>
+      <div class="hint" id="rulesAdminHint">Slobodan unos teksta — pravila, propozicije, napomene za suce ili natjecatelje. Sprema se automatski i može se ispisati (tab "Ispis / Print"). Natjecatelji ga vide u javnom pregledu.</div>
+      <div id="rulesReadonly"></div>
       <textarea id="rulesTextarea" placeholder="Ovdje upišite pravila natjecanja..."></textarea>
       <div class="autosave-note" id="rulesAutosaveNote">Tekst se automatski sprema dok pišete.</div>
+    </div>
+  </div>
+
+  <!-- ================= INFO TAB (javni pregled) ================= -->
+  <div class="tab-content" id="tab-info">
+    <div class="card">
+      <h2><span class="ring-dot"></span>Informacije o natjecanju</h2>
+      <div id="infoContent"></div>
+    </div>
+  </div>
+
+  <!-- ================= ARHIVA TAB ================= -->
+  <div class="tab-content" id="tab-arhiva">
+    <div class="card no-print">
+      <h2><span class="ring-dot"></span>Arhiva prošlih natjecanja</h2>
+      <div class="hint">Svako izdanje (redni broj) sprema se trajno i odvojeno. Ovdje možete pogledati stara izdanja u načinu samo za čitanje, bez rizika da nešto promijenite.</div>
+      <button class="btn secondary" id="loadArchiveBtn">Osvježi popis</button>
+      <div class="archive-list" id="archiveList"></div>
     </div>
   </div>
 
@@ -503,7 +556,7 @@ body.archive-mode #tab-pravila textarea{
     const banner = document.createElement('div');
     banner.id = 'fatalErrorBannerShown';
     banner.style.cssText = 'max-width:640px; margin:20px auto; padding:18px 22px; border:2px solid #C0392B; border-radius:10px; font-family:Inter,sans-serif; background:#FBE9E6; color:#7A1F17; white-space:pre-wrap; font-size:13px; position:relative; z-index:9999;';
-    banner.innerHTML = '<strong style="font-family:Oswald,sans-serif; font-size:15px; display:block; margin-bottom:8px;">Neuhvaćena greška</strong>'+
+    banner.innerHTML = '<strong style="font-family:Big Shoulders,sans-serif; font-size:15px; display:block; margin-bottom:8px;">Neuhvaćena greška</strong>'+
       String(e.message||e).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))+
       (e.filename ? '<br><span style="font-size:11px; opacity:.75;">'+e.filename+':'+e.lineno+':'+e.colno+'</span>' : '');
     const app = document.getElementById('app');
@@ -515,7 +568,7 @@ body.archive-mode #tab-pravila textarea{
     banner.id = 'fatalErrorBannerShown';
     banner.style.cssText = 'max-width:640px; margin:20px auto; padding:18px 22px; border:2px solid #C0392B; border-radius:10px; font-family:Inter,sans-serif; background:#FBE9E6; color:#7A1F17; white-space:pre-wrap; font-size:13px; position:relative; z-index:9999;';
     const msg = e.reason && e.reason.message ? e.reason.message : String(e.reason);
-    banner.innerHTML = '<strong style="font-family:Oswald,sans-serif; font-size:15px; display:block; margin-bottom:8px;">Neuhvaćena Promise greška</strong>'+
+    banner.innerHTML = '<strong style="font-family:Big Shoulders,sans-serif; font-size:15px; display:block; margin-bottom:8px;">Neuhvaćena Promise greška</strong>'+
       String(msg).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
     const app = document.getElementById('app');
     if(app) app.prepend(banner); else document.body.prepend(banner);
@@ -523,7 +576,7 @@ body.archive-mode #tab-pravila textarea{
   if(typeof firebase === 'undefined'){
     document.getElementById('app').innerHTML =
       '<div style="max-width:520px; margin:60px auto; padding:24px; border:2px solid #E8590C; border-radius:10px; font-family:Inter,sans-serif; background:#FFF4E0;">'+
-      '<h2 style="font-family:Oswald,sans-serif; color:#8A5300; margin-top:0;">Nije moguće učitati bazu podataka</h2>'+
+      '<h2 style="font-family:Big Shoulders,sans-serif; color:#8A5300; margin-top:0;">Nije moguće učitati bazu podataka</h2>'+
       '<p>Skripta za povezivanje s Firebase bazom nije se učitala (blokirana veza ili nema interneta). Provjerite internetsku vezu i osvježite stranicu. Ako se ovo ponavlja, pokušajte otvoriti datoteku u drugom pregledniku.</p>'+
       '</div>';
     return;
@@ -601,18 +654,20 @@ body.archive-mode #tab-pravila textarea{
   }
 
   function sanitizeEditionKey(str){
-    const cleaned = (str||'').trim().replace(/[^a-zA-Z0-9-_.]+/g, '-').replace(/^.+$/,'');
+    const cleaned = (str||'').trim().replace(/[^a-zA-Z0-9\-_.]+/g, '-').replace(/^\.+$/,'');
     return cleaned || 'default';
   }
 
   function normalizeData(d){
     if(!d.config) d.config = {};
     if(d.config.numJumps === undefined) d.config.numJumps = 9;
-    if(d.config.eventName === undefined) d.config.eventName = 'Skokovi u cilj';
+    if(d.config.eventName === undefined) d.config.eventName = 'Alkarski Padobranski Kup';
     if(d.config.eventEdition === undefined) d.config.eventEdition = '';
     if(!d.teams) d.teams = [];
     if(!d.results) d.results = {};
     if(d.rules === undefined) d.rules = '';
+    ['eventLocation','eventDate','eventContact','eventWeb'].forEach(k=>{ if(d.config[k] === undefined) d.config[k] = ''; });
+    d.teams.forEach(t=>{ if(t.country === undefined) t.country = ''; });
     return d;
   }
 
@@ -689,7 +744,7 @@ body.archive-mode #tab-pravila textarea{
   }
 
   async function saveData(){
-    if(archiveMode) return; // never write while viewing an archived edition
+    if(archiveMode || SPECTATOR_MODE) return; // never write while viewing an archived edition
     try{
       await db.collection(COLLECTION).doc(currentEditionKey).set(data);
       hasUnsavedChanges = false;
@@ -700,7 +755,7 @@ body.archive-mode #tab-pravila textarea{
   }
 
   function saveDataDebounced(delay){
-    if(archiveMode) return;
+    if(archiveMode || SPECTATOR_MODE) return;
     hasUnsavedChanges = true;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(()=>{ saveTimer = null; saveData(); }, delay||600);
@@ -719,6 +774,12 @@ body.archive-mode #tab-pravila textarea{
     if(activeTab==='rang') renderRangTab();
     if(activeTab==='pravila') renderPravilaTab();
     if(activeTab==='ispis') renderIspisTab();
+    ['eventLocationInput','eventDateInput','eventContactInput','eventWebInput'].forEach(id=>{
+      const el = document.getElementById(id);
+      const key = {eventLocationInput:'eventLocation',eventDateInput:'eventDate',eventContactInput:'eventContact',eventWebInput:'eventWeb'}[id];
+      if(el && document.activeElement !== el) el.value = data.config[key] || '';
+    });
+    renderInfoTab();
   }
 
   // ---------------- Edition switching (new competition = new archived document) ----------------
@@ -810,6 +871,7 @@ body.archive-mode #tab-pravila textarea{
         if(btn.dataset.tab === 'rang') renderRangTab();
         if(btn.dataset.tab === 'pravila') renderPravilaTab();
         if(btn.dataset.tab === 'ispis') renderIspisTab();
+        if(btn.dataset.tab === 'info') renderInfoTab();
       });
     });
   }
@@ -817,13 +879,17 @@ body.archive-mode #tab-pravila textarea{
   // ---------------- Postavke (numJumps) ----------------
   function renderHeaderTitle(){
     const nameEl = document.getElementById('headerTitle');
-    const name = (data.config.eventName || '').trim() || 'Skokovi u cilj';
+    const name = (data.config.eventName || '').trim() || 'Alkarski Padobranski Kup';
     const edition = (data.config.eventEdition || '').trim();
     nameEl.textContent = edition ? (edition + ' ' + name) : name;
+    if(SPECTATOR_MODE){
+      const parts = [(data.config.eventLocation||'').trim(), (data.config.eventDate||'').trim()].filter(Boolean);
+      document.getElementById('headerSub').innerHTML = (parts.length ? escapeHtml(parts.join(' · ')) + ' ' : '') + '<span class="live-badge"><span class="dot"></span>uživo</span>';
+    }
   }
 
   function eventTitleText(){
-    const name = (data.config.eventName || '').trim() || 'Skokovi u cilj';
+    const name = (data.config.eventName || '').trim() || 'Alkarski Padobranski Kup';
     const edition = (data.config.eventEdition || '').trim();
     return edition ? (edition + ' ' + name) : name;
   }
@@ -843,7 +909,7 @@ body.archive-mode #tab-pravila textarea{
       // live header preview only — the actual archive-switch decision happens on change (blur/enter)
       const preview = (eventEditionInput.value||'').trim();
       const nameEl = document.getElementById('headerTitle');
-      const name = (data.config.eventName || '').trim() || 'Skokovi u cilj';
+      const name = (data.config.eventName || '').trim() || 'Alkarski Padobranski Kup';
       nameEl.textContent = preview ? (preview + ' ' + name) : name;
     });
     eventEditionInput.addEventListener('change', ()=>{
@@ -853,6 +919,12 @@ body.archive-mode #tab-pravila textarea{
         return;
       }
       switchToNewEdition(newVal);
+    });
+
+    [['eventLocationInput','eventLocation'],['eventDateInput','eventDate'],['eventContactInput','eventContact'],['eventWebInput','eventWeb']].forEach(pair=>{
+      const el = document.getElementById(pair[0]);
+      el.value = data.config[pair[1]] || '';
+      el.addEventListener('input', ()=>{ data.config[pair[1]] = el.value; saveDataDebounced(500); });
     });
 
     const sel = document.getElementById('numJumpsSelect');
@@ -925,9 +997,30 @@ body.archive-mode #tab-pravila textarea{
     console.log('[skokovi-u-cilj] buildMembersGrid finished, grid.children.length=', grid.children.length);
   }
 
+  function ccBadge(cc){ return cc ? '<span class="cc-badge">'+escapeHtml(cc)+'</span>' : ''; }
   function escapeAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
   function escapeHtml(s){
     return (s==null?'':String(s)).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  }
+
+  // Alka-prsten oznaka mjesta: dva kruga, tri jednako razmaknuta kraka (isto kao pravi alkarski prsten).
+  function alkaBadgeHtml(place, sizePx){
+    sizePx = sizePx || 32;
+    const colors = { 1:'#D4A017', 2:'#9aa0a6', 3:'#B5451D' };
+    const color = colors[place];
+    if(!color){
+      return '<span class="place-plain">'+place+'.</span>';
+    }
+    return '<span class="alka-badge-wrap">'+
+      '<svg width="'+sizePx+'" height="'+sizePx+'" viewBox="0 0 90 90" class="alka-badge-svg">'+
+        '<circle cx="45" cy="45" r="38" fill="none" stroke="'+color+'" stroke-width="7"/>'+
+        '<circle cx="45" cy="45" r="14" fill="none" stroke="'+color+'" stroke-width="7"/>'+
+        '<line x1="45" y1="7" x2="45" y2="31" stroke="'+color+'" stroke-width="7"/>'+
+        '<line x1="32.9" y1="52" x2="12.1" y2="64" stroke="'+color+'" stroke-width="7"/>'+
+        '<line x1="57.1" y1="52" x2="77.9" y2="64" stroke="'+color+'" stroke-width="7"/>'+
+      '</svg>'+
+      '<span class="alka-badge-num">'+place+'.</span>'+
+    '</span>';
   }
 
   function nextTeamNumber(){
@@ -939,6 +1032,7 @@ body.archive-mode #tab-pravila textarea{
     document.getElementById('editingTeamId').value = '';
     document.getElementById('teamNumber').value = nextTeamNumber();
     document.getElementById('teamName').value = '';
+    document.getElementById('teamCountry').value = 'HR';
     buildMembersGrid(null);
     document.getElementById('cancelEditBtn').style.display = 'none';
     document.getElementById('saveTeamBtn').textContent = 'Spremi ekipu';
@@ -948,6 +1042,7 @@ body.archive-mode #tab-pravila textarea{
     document.getElementById('editingTeamId').value = team.number;
     document.getElementById('teamNumber').value = team.number;
     document.getElementById('teamName').value = team.name;
+    document.getElementById('teamCountry').value = team.country || '';
     buildMembersGrid(team.competitors);
     document.getElementById('cancelEditBtn').style.display = '';
     document.getElementById('saveTeamBtn').textContent = 'Spremi izmjene';
@@ -982,7 +1077,8 @@ body.archive-mode #tab-pravila textarea{
     }
 
     const existingIdx = data.teams.findIndex(t=> String(t.number) === String(editingId));
-    const teamObj = { number, name, competitors };
+    const country = (document.getElementById('teamCountry').value || '').trim().toUpperCase().slice(0,3);
+    const teamObj = { number, name, country, competitors };
     if(existingIdx >= 0){
       data.teams[existingIdx] = teamObj;
     } else {
@@ -1024,7 +1120,7 @@ body.archive-mode #tab-pravila textarea{
       }).join('');
       div.innerHTML =
         '<div class="info">'+
-          '<div class="team-name"><span class="num">'+team.number+'</span> — '+escapeHtml(team.name)+'</div>'+
+          '<div class="team-name"><span class="num">'+team.number+'</span> — '+ccBadge(team.country)+escapeHtml(team.name)+'</div>'+
           '<div class="members">'+membersHtml+'</div>'+
         '</div>'+
         '<div class="actions">'+
@@ -1296,7 +1392,7 @@ body.archive-mode #tab-pravila textarea{
           id, teamNumber:team.number, letter:comp.letter,
           natBroj: team.number + comp.letter,
           ime: missing ? '(prazno mjesto)' : comp.ime,
-          klub: team.name,
+          klub: team.name, cc: team.country || '',
           missing, jumpsEntered, totalJumps,
           totalPoints, totalCm, pointsValues, cmValues
         });
@@ -1326,7 +1422,7 @@ body.archive-mode #tab-pravila textarea{
         });
       });
       return {
-        teamNumber: team.number, name: team.name, missing: eligibleComps.length===0,
+        teamNumber: team.number, name: team.name, cc: team.country || '', missing: eligibleComps.length===0,
         jumpsEntered, totalJumps: groupSize * eligibleComps.length,
         totalPoints, totalCm, pointsValues, cmValues
       };
@@ -1334,7 +1430,10 @@ body.archive-mode #tab-pravila textarea{
     .filter(t => t.totalJumps > 0); // teams with zero eligible competitors for this round don't appear at all
   }
 
-  function renderRoundSectionHtml(group){
+  function renderRoundSectionHtml(group, part){
+    part = part || 'both';
+    const showInd = part !== 'tim';
+    const showTeam = !group.isSubRound && part !== 'ind';
     const n = data.config.numJumps;
     const labels = jumpLabels(n).slice(group.startIdx, group.endIdx+1);
     const totalJumpsInGroup = group.endIdx - group.startIdx + 1;
@@ -1344,18 +1443,20 @@ body.archive-mode #tab-pravila textarea{
 
     let html = '<div class="incomplete-banner">Poredak je prikazan na temelju trenutno upisanih skokova i mijenja se uživo. "Upisano" pokazuje koliko je od ukupno '+totalJumpsInGroup+' skokova ('+group.label+') evidentirano.'+(group.isSubRound ? ' Natjecatelji označeni kao izvan Bara/Čoja/Alka ovdje se ne prikazuju (i dalje broje u Ukupno).' : '')+'</div>';
 
-    html += '<h3 class="section-subtitle">'+group.label+' — pojedinačno</h3>';
-    if(indivRanked.length===0){
+    if(showInd) html += '<h3 class="section-subtitle">'+group.label+' — pojedinačno</h3>';
+    if(!showInd){
+      /* samo ekipni prikaz */
+    } else if(indivRanked.length===0){
       html += '<div class="empty-state">Još nema unesenih rezultata za ovaj naslov.</div>';
     } else {
-      html += '<div class="rank-table-wrap"><table class="rank-table"><thead><tr><th>Mjesto</th><th>Br.</th><th>Ime i prezime</th><th>Klub</th>';
+      html += '<div class="rank-table-wrap"><table class="rank-table"><thead><tr><th>Mjesto</th><th class="hide-narrow">Br.</th><th>Ime i prezime</th><th class="hide-narrow">Klub</th>';
       labels.forEach(l=> html += '<th class="jump-head">'+l+'</th>');
-      html += '<th>Rezultat</th><th>Upisano</th></tr></thead><tbody>';
+      html += '<th>Rezultat</th><th class="hide-narrow">Upisano</th></tr></thead><tbody>';
       indivRanked.forEach(c=>{
         const full = c.missing || c.jumpsEntered === c.totalJumps;
         const arr = data.results[c.id] || [];
         const slice = sliceJumps(arr, group.startIdx, group.endIdx, n);
-        html += '<tr><td class="place">'+c.place+'.</td><td class="num">'+c.natBroj+'</td><td>'+escapeHtml(c.ime)+'</td><td>'+escapeHtml(c.klub)+'</td>';
+        html += '<tr><td class="place">'+alkaBadgeHtml(c.place)+'</td><td class="num hide-narrow">'+c.natBroj+'</td><td>'+ccBadge(c.cc)+escapeHtml(c.ime)+'<div class="club-sub">'+c.natBroj+' · '+escapeHtml(c.klub)+'</div></td><td class="hide-narrow">'+escapeHtml(c.klub)+'</td>';
         slice.forEach(r=>{
           if(r && r.points!==null && r.points!==undefined && r.cm!==null && r.cm!==undefined){
             html += '<td class="jump-cell"><span class="jp">'+r.points+'</span><span class="jc">'+r.cm+' cm</span></td>';
@@ -1364,11 +1465,11 @@ body.archive-mode #tab-pravila textarea{
           }
         });
         html += '<td class="result-cell"><span class="pts-big">'+c.totalPoints+'</span><span class="pts-unit">punata</span><span class="cm-line">'+c.totalCm+' cm</span></td>'+
-          '<td class="progress'+(full?' full':'')+'">'+(c.missing ? '—' : c.jumpsEntered+'/'+c.totalJumps)+'</td></tr>';
+          '<td class="progress hide-narrow'+(full?' full':'')+'">'+(c.missing ? '—' : c.jumpsEntered+'/'+c.totalJumps)+'</td></tr>';
       });
-      html += '</tbody></table></div>';
+      html += '</tbody></table></div><div class="rot-hint">Okrenite uređaj vodoravno za prikaz svih skokova.</div>';
     }
-    if(notStarted.length>0){
+    if(showInd && notStarted.length>0){
       html += '<h3 style="margin-top:20px; font-size:13px; color:var(--ink-dim);">Natjecatelji koji još nisu skočili nijednu seriju u ovom naslovu</h3>';
       html += '<table class="rank-table"><thead><tr><th>Br.</th><th>Ime i prezime</th><th>Klub</th></tr></thead><tbody>';
       notStarted.forEach(c=>{
@@ -1377,19 +1478,19 @@ body.archive-mode #tab-pravila textarea{
       html += '</tbody></table>';
     }
 
-    if(!group.isSubRound){
+    if(showTeam){
       const teamAll = buildGroupTeamStandings(group.startIdx, group.endIdx, group.isSubRound);
       const { ranked: teamRanked } = rankList(teamAll);
       html += '<h3 class="section-subtitle">'+group.label+' — ekipno</h3>';
       if(teamRanked.length===0){
         html += '<div class="empty-state">Još nema unesenih rezultata ni za jednu ekipu.</div>';
       } else {
-        html += '<table class="team-rank-table"><thead><tr><th>Mjesto</th><th>Br.</th><th>Naziv ekipe</th><th>Rezultat</th><th>Upisano</th></tr></thead><tbody>';
+        html += '<table class="team-rank-table"><thead><tr><th>Mjesto</th><th class="hide-narrow">Br.</th><th>Naziv ekipe</th><th>Rezultat</th><th class="hide-narrow">Upisano</th></tr></thead><tbody>';
         teamRanked.forEach(t=>{
           const full = t.jumpsEntered === t.totalJumps;
-          html += '<tr><td class="place">'+t.place+'.</td><td class="num">'+t.teamNumber+'</td><td>'+escapeHtml(t.name)+'</td>'+
+          html += '<tr><td class="place">'+alkaBadgeHtml(t.place)+'</td><td class="num hide-narrow">'+t.teamNumber+'</td><td>'+ccBadge(t.cc)+escapeHtml(t.name)+'</td>'+
             '<td class="result-cell"><span class="pts-big">'+t.totalPoints+'</span><span class="pts-unit">punata</span><span class="cm-line">'+t.totalCm+' cm</span></td>'+
-            '<td class="progress'+(full?' full':'')+'">'+t.jumpsEntered+'/'+t.totalJumps+'</td></tr>';
+            '<td class="progress hide-narrow'+(full?' full':'')+'">'+t.jumpsEntered+'/'+t.totalJumps+'</td></tr>';
         });
         html += '</tbody></table>';
       }
@@ -1397,20 +1498,52 @@ body.archive-mode #tab-pravila textarea{
     return html;
   }
 
+  function buildStatsHtml(){
+    let competitors = 0, jumps = 0;
+    data.teams.forEach(t=> t.competitors.forEach(c=>{
+      if(isMissing(c)) return;
+      competitors++;
+      (data.results[competitorId(t.number, c.letter)] || []).forEach(r=>{
+        if(r && r.points!==null && r.points!==undefined && r.cm!==null && r.cm!==undefined) jumps++;
+      });
+    }));
+    const box = (n,l)=> '<div class="stat-box"><b>'+n+'</b><span>'+l+'</span></div>';
+    return '<div class="stats-row">'+box(competitors,'Natjecatelja')+box(data.teams.length,'Ekipa')+box(jumps,'Skokova upisano')+box(data.config.numJumps,'Serija')+'</div>';
+  }
+
   function renderRangTab(){
     const holder = document.getElementById('rangContent');
-    const roundRow = document.getElementById('rangRoundRow');
     const roundSelect = document.getElementById('rangRoundSelect');
-    const showRoundSelector = roundsAvailable();
-    roundRow.style.display = showRoundSelector ? '' : 'none';
+    const opts = [['tim','Ukupno — ekipe'],['ind','Ukupno — pojedinačno']];
+    if(roundsAvailable()) opts.push(['bara','Bara (I–III)'],['coja','Čoja (IV–VI)'],['alka','Alka (VII–IX)']);
+    if(roundSelect.options.length !== opts.length){
+      const prev = roundSelect.value;
+      roundSelect.innerHTML = opts.map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join('');
+      roundSelect.value = opts.some(o=>o[0]===prev) ? prev : 'tim';
+    }
+    const statsHolder = document.getElementById('rangStats');
 
     if(data.teams.length===0){
+      statsHolder.innerHTML = '';
       holder.innerHTML = '<div class="empty-state">Nema unesenih ekipa.</div>';
       return;
     }
-    const roundKey = showRoundSelector ? roundSelect.value : 'ukupno';
-    const group = getRoundGroup(roundKey);
-    holder.innerHTML = renderRoundSectionHtml(group);
+    statsHolder.innerHTML = buildStatsHtml();
+    const v = roundSelect.value;
+    const group = getRoundGroup(v==='tim' || v==='ind' ? 'ukupno' : v);
+    holder.innerHTML = renderRoundSectionHtml(group, v==='tim' ? 'tim' : v==='ind' ? 'ind' : 'both');
+  }
+
+  function renderInfoTab(){
+    const el = document.getElementById('infoContent');
+    if(!el) return;
+    const c = data.config;
+    const row = (label, val)=> val && String(val).trim() ? '<dt>'+label+'</dt><dd>'+val+'</dd>' : '';
+    const contact = escapeHtml((c.eventContact||'').trim()).replace(/([\w.+-]+@[\w-]+\.[\w.-]+)/g,'<a href="mailto:$1">$1</a>');
+    let web = (c.eventWeb||'').trim();
+    const webHtml = web ? '<a href="'+escapeAttr(/^https?:/i.test(web)?web:'https://'+web)+'" target="_blank" rel="noopener">'+escapeHtml(web)+'</a>' : '';
+    const html = row('Natjecanje', escapeHtml(eventTitleText())) + row('Mjesto', escapeHtml((c.eventLocation||'').trim())) + row('Datum', escapeHtml((c.eventDate||'').trim())) + row('Kontakt', contact) + row('Web', webHtml);
+    el.innerHTML = html ? '<dl class="info-list">'+html+'</dl>' : '<div class="empty-state">Informacije još nisu unesene.</div>';
   }
 
   // ---------------- Pravila tab ----------------
@@ -1419,6 +1552,8 @@ body.archive-mode #tab-pravila textarea{
     if(document.activeElement !== ta){
       ta.value = data.rules || '';
     }
+    const ro = document.getElementById('rulesReadonly');
+    if(ro) ro.textContent = (data.rules || '').trim() || 'Pravila još nisu objavljena.';
   }
 
   // ---------------- Ispis tab ----------------
@@ -1466,7 +1601,7 @@ body.archive-mode #tab-pravila textarea{
     indivRanked.forEach(c=>{
       const arr = data.results[c.id] || [];
       const slice = sliceJumps(arr, group.startIdx, group.endIdx, n);
-      html += '<tr><td>'+c.place+'.</td><td>'+c.natBroj+'</td><td class="name-cell">'+escapeHtml(c.ime)+'</td><td class="name-cell">'+escapeHtml(c.klub)+'</td>';
+      html += '<tr><td>'+alkaBadgeHtml(c.place,22)+'</td><td>'+c.natBroj+'</td><td class="name-cell">'+escapeHtml(c.ime)+'</td><td class="name-cell">'+escapeHtml(c.klub)+'</td>';
       slice.forEach(r=>{
         if(r && r.points!==null && r.points!==undefined && r.cm!==null && r.cm!==undefined){
           html += '<td>'+r.points+'<br><span style="font-size:9px;color:#666;">'+r.cm+'cm</span></td>';
@@ -1492,7 +1627,7 @@ body.archive-mode #tab-pravila textarea{
       html += '<div class="team-block-title">'+group.label+' — ekipno</div>';
       html += '<table class="sheet-table"><thead><tr><th style="width:60px;">Mjesto</th><th style="width:60px;">Br.</th><th style="text-align:left;">Naziv ekipe</th><th style="width:100px;">Rezultat</th><th style="width:55px;">Upisano</th></tr></thead><tbody>';
       teamRanked.forEach(t=>{
-        html += '<tr><td>'+t.place+'.</td><td>'+t.teamNumber+'</td><td class="name-cell">'+escapeHtml(t.name)+'</td><td><strong>'+t.totalPoints+'</strong> punata<br>'+t.totalCm+' cm</td><td>'+t.jumpsEntered+'/'+t.totalJumps+'</td></tr>';
+        html += '<tr><td>'+alkaBadgeHtml(t.place,22)+'</td><td>'+t.teamNumber+'</td><td class="name-cell">'+escapeHtml(t.name)+'</td><td><strong>'+t.totalPoints+'</strong> punata<br>'+t.totalCm+' cm</td><td>'+t.jumpsEntered+'/'+t.totalJumps+'</td></tr>';
       });
       html += '</tbody></table>';
     }
@@ -1584,7 +1719,7 @@ body.archive-mode #tab-pravila textarea{
   function showFatalError(step, err){
     const banner = document.createElement('div');
     banner.style.cssText = 'max-width:640px; margin:20px auto; padding:18px 22px; border:2px solid #C0392B; border-radius:10px; font-family:Inter,sans-serif; background:#FBE9E6; color:#7A1F17; white-space:pre-wrap; font-size:13px;';
-    banner.innerHTML = '<strong style="font-family:Oswald,sans-serif; font-size:15px; display:block; margin-bottom:8px;">Greška pri pokretanju (korak: '+step+')</strong>'+
+    banner.innerHTML = '<strong style="font-family:Big Shoulders,sans-serif; font-size:15px; display:block; margin-bottom:8px;">Greška pri pokretanju (korak: '+step+')</strong>'+
       escapeHtmlSafe(err && err.message ? err.message : String(err)) +
       (err && err.stack ? '<br><br><code style="font-size:11px; opacity:.8;">'+escapeHtmlSafe(err.stack)+'</code>' : '');
     document.getElementById('app').prepend(banner);
@@ -1612,6 +1747,8 @@ body.archive-mode #tab-pravila textarea{
     if(SPECTATOR_MODE){
       document.body.classList.add('spectator-mode');
       document.getElementById('headerSub').innerHTML = 'Javni pregled rezultata <span class="live-badge"><span class="dot"></span>uživo</span>';
+      document.querySelector('.tab-btn[data-tab="rang"]').textContent = 'Rezultati';
+      document.querySelector('.tab-btn[data-tab="pravila"]').textContent = 'Pravila';
       const rangBtn = document.querySelector('.tab-btn[data-tab="rang"]');
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
@@ -1635,7 +1772,7 @@ body.archive-mode #tab-pravila textarea{
       saveDataDebounced(700);
     });
 
-    document.getElementById('loadArchiveBtn').addEventListener('click', async ()=>{
+    async function loadArchiveList(){
       const listHolder = document.getElementById('archiveList');
       listHolder.innerHTML = '<div class="hint">Učitavanje…</div>';
       try{
@@ -1657,7 +1794,9 @@ body.archive-mode #tab-pravila textarea{
       } catch(e){
         listHolder.innerHTML = '<div class="hint">Greška pri dohvaćanju arhive.</div>';
       }
-    });
+    }
+    document.getElementById('loadArchiveBtn').addEventListener('click', loadArchiveList);
+    document.querySelector('.tab-btn[data-tab="arhiva"]').addEventListener('click', loadArchiveList);
 
     document.getElementById('exitArchiveBtn').addEventListener('click', exitArchiveMode);
 
