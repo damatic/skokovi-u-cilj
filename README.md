@@ -3,7 +3,7 @@
 Jedna HTML datoteka (`index.html`) za vođenje padobranskog natjecanja u preciznom slijetanju (Aerodrom Sinj, Aeroklub Sinj). Podaci se spremaju u Firebase Firestore, a stranica je objavljena na GitHub Pages.
 
 - Aplikacija: https://damatic.github.io/skokovi-u-cilj/
-- Javni prikaz (samo čitanje): https://damatic.github.io/skokovi-u-cilj/?public=1
+- Javni prikaz (samo čitanje): https://damatic.github.io/skokovi-u-cilj/?rezultati
 - GitHub repozitorij: `damatic/skokovi-u-cilj`
 - Firebase projekt: `skydiveapp-97a86`
 
@@ -73,7 +73,7 @@ Prijava ne radi preko `file:///...` (greška `auth/operation-not-supported-in-th
 python -m http.server 8000
 ```
 
-pa otvori http://localhost:8000. Javni prikaz (`?public=1`) radi i preko `file://`.
+pa otvori http://localhost:8000. Javni prikaz (`?rezultati`) radi i preko `file://`.
 
 ## Struktura podataka (Firestore)
 

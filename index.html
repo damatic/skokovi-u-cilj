@@ -240,6 +240,7 @@ table.team-rank-table td.jump-cell{font-family:'Roboto Mono'; text-align:center;
 table.team-rank-table td.jump-cell .jp{font-weight:700; color:var(--ink);}
 table.team-rank-table td.jump-cell .jc{display:block; font-size:10px; white-space:nowrap;}
 table.team-rank-table th.jump-head{text-align:center; width:48px;}
+@media(min-width:520px){ table.team-rank-table tr.team-row td:nth-child(3), table.team-rank-table td.member-name{white-space:nowrap;} }
 
 table.team-rank-table td.result-cell{font-family:'Roboto Mono'; text-align:center; width:130px; line-height:1.35;}
 table.team-rank-table td.result-cell .pts-big{font-size:17px; font-weight:700; color:var(--navy-800);}
@@ -408,7 +409,7 @@ body.archive-mode #tab-pravila textarea{
 
   <div id="lockedCard" class="no-print">
     <p><strong>Uređivanje je dostupno samo administratoru.</strong><br>Prijavite se ili pogledajte javni prikaz rezultata.</p>
-    <button class="btn secondary" type="button" onclick="location.href='?public=1'">Javni prikaz rezultata</button>
+    <button class="btn secondary" type="button" onclick="location.href='?rezultati'">Javni prikaz rezultata</button>
   </div>
 
   <div class="tabs no-print" id="mainTabs">
@@ -642,7 +643,7 @@ body.archive-mode #tab-pravila textarea{
     return;
   }
   const LETTERS = ['A','B','C','D','E'];
-  const SPECTATOR_MODE = new URLSearchParams(window.location.search).get('public') === '1';
+  const SPECTATOR_MODE = (function(){ const q = new URLSearchParams(window.location.search); return q.has('rezultati') || q.get('public') === '1'; })(); // ?rezultati (novo), ?public=1 (staro, i dalje radi)
 
   const firebaseConfig = {
     apiKey: "AIzaSyAW8MABj16yzqaLEI2Xof3o4NulA2KfGCU",
@@ -2113,8 +2114,7 @@ body.archive-mode #tab-pravila textarea{
   // ---------------- Init ----------------
   function setupPublicLinkCard(){
     const url = new URL(window.location.href);
-    url.search = '';
-    url.searchParams.set('public', '1');
+    url.search = '?rezultati';
     const input = document.getElementById('publicLinkInput');
     input.value = url.toString();
     document.getElementById('copyPublicLinkBtn').addEventListener('click', async ()=>{
