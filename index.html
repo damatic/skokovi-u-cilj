@@ -233,7 +233,11 @@ table.team-rank-table th:nth-child(4){text-align:center;}
 .section-subtitle{font-family:'Big Shoulders'; text-transform:uppercase; font-size:14px; color:var(--navy-800); margin:22px 0 8px;}
 
 /* ---------- Print reports ---------- */
-.print-controls{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px;}
+.print-controls{display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px;}
+.print-controls .field{margin-bottom:0;}
+.print-controls #reportTypeSelect{width:320px; max-width:100%;}
+.print-controls #rangPrintRound{width:170px; max-width:100%;}
+.print-controls .field.small{max-width:none;}
 .report-preview{background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:24px;}
 .report-title{text-align:center; margin-bottom:4px;}
 .report-title h2{font-size:19px; color:var(--navy-800);}
@@ -573,7 +577,7 @@ body.archive-mode #tab-pravila textarea{
           <option value="pravila">Pravila natjecanja</option>
         </select>
       </div>
-      <div class="field small" id="rangPrintRoundField" style="display:none; margin-bottom:0;">
+      <div class="field small" id="rangPrintRoundField" style="visibility:hidden; margin-bottom:0;">
         <label>Naslov</label>
         <select id="rangPrintRound">
           <option value="ukupno">Ukupno</option>
@@ -1911,7 +1915,7 @@ body.archive-mode #tab-pravila textarea{
   function renderIspisTab(){
     const type = document.getElementById('reportTypeSelect').value;
     const preview = document.getElementById('reportPreview');
-    document.getElementById('rangPrintRoundField').style.display = (type==='rang' && roundsAvailable()) ? '' : 'none';
+    document.getElementById('rangPrintRoundField').style.visibility = (type==='rang' && roundsAvailable()) ? 'visible' : 'hidden';
     if(type==='pravila'){
       preview.innerHTML = buildPravilaReportHtml() + signatureBlockHtml();
       return;
