@@ -379,7 +379,7 @@ body.archive-mode #tab-pravila textarea{
 
   <div id="lockedCard" class="no-print">
     <p><strong>Uređivanje je dostupno samo administratoru.</strong><br>Prijavite se ili pogledajte javni prikaz rezultata.</p>
-    <a class="btn secondary" href="?public=1" style="text-decoration:none; display:inline-block;">Javni prikaz rezultata</a>
+    <button class="btn secondary" type="button" onclick="location.href='?public=1'">Javni prikaz rezultata</button>
   </div>
 
   <div class="tabs no-print" id="mainTabs">
@@ -1807,7 +1807,7 @@ body.archive-mode #tab-pravila textarea{
 
     if(showTeam){
       const teamAll = buildGroupTeamStandings(group.startIdx, group.endIdx, group.isSubRound);
-      const { ranked: teamRanked } = rankList(teamAll);
+      const { ranked: teamRanked, notStarted: teamNotStarted } = rankList(teamAll);
       html += '<h3 class="section-subtitle">'+group.label+' — ekipno</h3>';
       if(teamRanked.length===0){
         html += '<div class="empty-state">Još nema unesenih rezultata ni za jednu ekipu.</div>';
@@ -1818,6 +1818,14 @@ body.archive-mode #tab-pravila textarea{
           html += '<tr><td class="place">'+alkaBadgeHtml(t.place)+'</td><td class="num hide-narrow">'+t.teamNumber+'</td><td>'+ccBadge(t.cc)+escapeHtml(t.name)+'</td>'+
             '<td class="result-cell"><span class="pts-big">'+t.totalPoints+'</span><span class="pts-unit">punata</span><span class="cm-line">'+t.totalCm+' cm</span></td>'+
             '<td class="progress hide-narrow'+(full?' full':'')+'">'+t.jumpsEntered+'/'+t.totalJumps+'</td></tr>';
+        });
+        html += '</tbody></table>';
+      }
+      if(teamNotStarted.length>0){
+        html += '<h3 style="margin-top:20px; font-size:13px; color:var(--ink-dim);">Ekipe koje još nisu skočile</h3>';
+        html += '<table class="rank-table"><thead><tr><th>Br.</th><th>Naziv ekipe</th></tr></thead><tbody>';
+        teamNotStarted.forEach(t=>{
+          html += '<tr><td class="num">'+t.teamNumber+'</td><td>'+ccBadge(t.cc)+escapeHtml(t.name)+'</td></tr>';
         });
         html += '</tbody></table>';
       }
