@@ -306,6 +306,13 @@ body.locked .lockable{pointer-events:none; opacity:.45;}
 .sign-block{margin-top:48px; display:flex; flex-direction:column; align-items:flex-end; break-inside:avoid; page-break-inside:avoid;}
 .sign-line{width:260px; border-bottom:1.5px solid #111; height:34px;}
 .sign-label{width:260px; text-align:center; font-size:12px; color:#333; margin-top:4px;}
+.series-banner{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; background:var(--paper-dim); border-left:4px solid var(--red,#C8151B); border-radius:8px; padding:10px 14px; margin:4px 0 14px;}
+.series-main{font-size:15px; color:var(--ink);}
+.series-main b{font-family:'Big Shoulders'; font-size:26px; color:var(--navy-800); margin:0 2px;}
+.series-status{font-size:12.5px; color:var(--ink-dim);}
+.series-status.live{color:#1b7a3d; font-weight:600;}
+.series-status.live::before{content:''; display:inline-block; width:7px; height:7px; border-radius:50%; background:#2ecc71; margin-right:6px;}
+.series-status.done{color:var(--navy-800); font-weight:700;}
 body.auth-pending .lockable{pointer-events:none;}
 .jump-cell.miss{opacity:.55;}
 body.locked #mainTabs, body.locked .tab-content, body.locked #archiveBanner,
@@ -508,6 +515,10 @@ body.archive-mode #tab-pravila textarea{
         <div class="field grow">
           <label>Odaberi ekipu</label>
           <select id="teamSelectForResults"></select>
+        </div>
+        <div class="field">
+          <label>Aktivna serija (prikaz na rang listi)</label>
+          <select id="activeSeriesSelect"></select>
         </div>
       </div>
       <div id="resultsGridWrap"></div>
@@ -745,6 +756,7 @@ body.archive-mode #tab-pravila textarea{
     if(d.config.numJumps === undefined) d.config.numJumps = 9;
     if(d.config.eventName === undefined) d.config.eventName = 'Alkarski Padobranski Kup';
     if(d.config.eventEdition === undefined) d.config.eventEdition = '';
+    if(d.config.activeSeries === undefined) d.config.activeSeries = 0; // 0 = automatski
     if(!d.teams) d.teams = [];
     if(!d.results) d.results = {};
     if(d.rules === undefined) d.rules = '';
@@ -969,7 +981,7 @@ body.archive-mode #tab-pravila textarea{
     if(eventNameInput) eventNameInput.value = data.config.eventName || '';
     if(eventEditionInput) eventEditionInput.value = data.config.eventEdition || '';
     const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
-    if(activeTab==='rezultati') renderResultsGrid();
+    if(activeTab==='rezultati'){ populateActiveSeriesSelect(); renderResultsGrid(); }
     if(activeTab==='rang') renderRangTab();
     if(activeTab==='pravila') renderPravilaTab();
     if(activeTab==='ispis') renderIspisTab();
@@ -1504,7 +1516,47 @@ body.archive-mode #tab-pravila textarea{
 
   function renderResultsTab(){
     populateTeamSelect();
+    populateActiveSeriesSelect();
     renderResultsGrid();
+  }
+
+  function populateActiveSeriesSelect(){
+    const sel = document.getElementById('activeSeriesSelect');
+    if(!sel) return;
+    const labels = jumpLabels(data.config.numJumps);
+    const cur = String(data.config.activeSeries || 0);
+    sel.innerHTML = '<option value="0">Automatski</option>' + labels.map((l,i)=>'<option value="'+(i+1)+'">Serija '+l+'</option>').join('');
+    sel.value = cur;
+    if(sel.value !== cur) sel.value = '0';
+  }
+
+  // Koja je serija trenutno aktivna: ručno (admin) ili automatski iz upisanih rezultata.
+  function getSeriesInfo(){
+    const n = data.config.numJumps;
+    const entered = Array(n).fill(0);
+    let total = 0;
+    data.teams.forEach(t=> t.competitors.forEach(c=>{
+      if(isMissing(c)) return;
+      total++;
+      const arr = data.results[competitorId(t.number, c.letter)] || [];
+      for(let i=0;i<n;i++){
+        const r = arr[i];
+        if(r && r.points!==null && r.points!==undefined && r.cm!==null && r.cm!==undefined) entered[i]++;
+      }
+    }));
+    let idx;
+    const manual = parseInt(data.config.activeSeries, 10) || 0;
+    if(manual >= 1 && manual <= n) idx = manual - 1;
+    else {
+      let last = -1;
+      for(let i=0;i<n;i++) if(entered[i] > 0) last = i;
+      if(last < 0) idx = 0;
+      else if(entered[last] >= total && last < n-1) idx = last + 1;
+      else idx = last;
+    }
+    const started = entered.some(x=>x>0) || manual >= 1;
+    const finished = total > 0 && entered[n-1] >= total && idx === n-1;
+    return { idx, n, label: jumpLabels(n)[idx], done: entered[idx], total, started, finished };
   }
 
   function renderResultsGrid(){
@@ -1885,17 +1937,20 @@ body.archive-mode #tab-pravila textarea{
     return html;
   }
 
-  function buildStatsHtml(){
-    let competitors = 0, jumps = 0;
-    data.teams.forEach(t=> t.competitors.forEach(c=>{
-      if(isMissing(c)) return;
-      competitors++;
-      (data.results[competitorId(t.number, c.letter)] || []).forEach(r=>{
-        if(r && r.points!==null && r.points!==undefined && r.cm!==null && r.cm!==undefined) jumps++;
-      });
-    }));
-    const box = (n,l)=> '<div class="stat-box"><b>'+n+'</b><span>'+l+'</span></div>';
-    return '<div class="stats-row">'+box(competitors,'Natjecatelja')+box(data.teams.length,'Ekipa')+box(jumps,'Skokova upisano')+box(data.config.numJumps,'Serija')+'</div>';
+  function buildSeriesBannerHtml(){
+    const si = getSeriesInfo();
+    let status;
+    if(si.finished) status = '<span class="series-status done">Natjecanje završeno</span>';
+    else if(!si.started) status = '<span class="series-status">Natjecanje još nije počelo</span>';
+    else status = '<span class="series-status live">u tijeku · '+si.done+' od '+si.total+' skočilo</span>';
+    return '<div class="series-banner"><div class="series-main">Serija <b>'+si.label+'</b> od '+si.n+'</div>'+status+'</div>';
+  }
+
+  // Sažetak događaja za karticu Informacije.
+  function eventCountsText(){
+    let competitors = 0;
+    data.teams.forEach(t=> t.competitors.forEach(c=>{ if(!isMissing(c)) competitors++; }));
+    return competitors+' natjecatelja · '+data.teams.length+' ekipa · '+data.config.numJumps+' serija';
   }
 
   function renderRangTab(){
@@ -1915,7 +1970,7 @@ body.archive-mode #tab-pravila textarea{
       holder.innerHTML = '<div class="empty-state">Nema unesenih ekipa.</div>';
       return;
     }
-    statsHolder.innerHTML = buildStatsHtml();
+    statsHolder.innerHTML = buildSeriesBannerHtml();
     const v = roundSelect.value;
     const isTotal = ['tim','ind','indM','indZ'].indexOf(v) >= 0;
     const group = getRoundGroup(isTotal ? 'ukupno' : v);
@@ -1930,7 +1985,7 @@ body.archive-mode #tab-pravila textarea{
     const contact = escapeHtml((c.eventContact||'').trim()).replace(/([\w.+-]+@[\w-]+\.[\w.-]+)/g,'<a href="mailto:$1">$1</a>');
     let web = (c.eventWeb||'').trim();
     const webHtml = web ? '<a href="'+escapeAttr(/^https?:/i.test(web)?web:'https://'+web)+'" target="_blank" rel="noopener">'+escapeHtml(web)+'</a>' : '';
-    const html = row('Natjecanje', escapeHtml(eventTitleText())) + row('Mjesto', escapeHtml((c.eventLocation||'').trim())) + row('Datum', escapeHtml((c.eventDate||'').trim())) + row('Kontakt', contact) + row('Web', webHtml);
+    const html = row('Natjecanje', escapeHtml(eventTitleText())) + row('Mjesto', escapeHtml((c.eventLocation||'').trim())) + row('Datum', escapeHtml((c.eventDate||'').trim())) + row('Kontakt', contact) + row('Web', webHtml) + row('Sudionici', escapeHtml(data.teams.length ? eventCountsText() : ''));
     el.innerHTML = html ? '<dl class="info-list">'+html+'</dl>' : '<div class="empty-state">Informacije još nisu unesene.</div>';
   }
 
@@ -2173,6 +2228,10 @@ body.archive-mode #tab-pravila textarea{
     document.getElementById('saveTeamBtn').addEventListener('click', saveTeamFromForm);
     document.getElementById('cancelEditBtn').addEventListener('click', resetTeamForm);
     document.getElementById('teamSelectForResults').addEventListener('change', renderResultsGrid);
+    document.getElementById('activeSeriesSelect').addEventListener('change', e=>{
+      data.config.activeSeries = parseInt(e.target.value, 10) || 0;
+      saveDataDebounced(300);
+    });
     document.getElementById('reportTypeSelect').addEventListener('change', renderIspisTab);
     document.getElementById('rangRoundSelect').addEventListener('change', renderRangTab);
     document.getElementById('rangPrintRound').addEventListener('change', renderIspisTab);
