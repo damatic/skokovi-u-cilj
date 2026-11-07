@@ -1711,6 +1711,8 @@ body.archive-mode #tab-pravila textarea{
         const totalJumps = endIdx - startIdx + 1;
         const pointsValues = enteredRows.map(r=>r.points);
         const cmValues = enteredRows.map(r=>r.cm);
+        // Serije koje nisu skočene računaju se kao 0 punata i 16 cm.
+        if(!missing) for(let k=jumpsEntered;k<(endIdx-startIdx+1);k++){ pointsValues.push(0); cmValues.push(16); }
         const totalPoints = pointsValues.reduce((a,b)=>a+b,0);
         const totalCm = cmValues.reduce((a,b)=>a+b,0);
         list.push({
@@ -1743,6 +1745,10 @@ body.archive-mode #tab-pravila textarea{
             totalPoints += r.points; totalCm += r.cm;
             pointsValues.push(r.points); cmValues.push(r.cm);
             jumpsEntered++;
+          } else {
+            // Serija koja nije skočena (ili prazno mjesto u ekipi) = 0 punata, 16 cm.
+            totalCm += 16;
+            pointsValues.push(0); cmValues.push(16);
           }
         });
       });
