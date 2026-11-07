@@ -282,6 +282,9 @@ body.spectator-mode #authBar, body.spectator-mode #backupCard{display:none !impo
 .auth-bar.ok{background:#E9F6EE; border-color:#A6D7B7; color:#1F5C38;}
 .auth-bar .grow{flex:1; min-width:200px;}
 body.locked .lockable{pointer-events:none; opacity:.45;}
+.sign-block{margin-top:48px; display:flex; flex-direction:column; align-items:flex-end; break-inside:avoid; page-break-inside:avoid;}
+.sign-line{width:260px; border-bottom:1.5px solid #111; height:34px;}
+.sign-label{width:260px; text-align:center; font-size:12px; color:#333; margin-top:4px;}
 body.auth-pending .lockable{pointer-events:none;}
 .jump-cell.miss{opacity:.55;}
 body.locked #mainTabs, body.locked .tab-content, body.locked #archiveBanner,
@@ -1910,16 +1913,21 @@ body.archive-mode #tab-pravila textarea{
     const preview = document.getElementById('reportPreview');
     document.getElementById('rangPrintRoundField').style.display = (type==='rang' && roundsAvailable()) ? '' : 'none';
     if(type==='pravila'){
-      preview.innerHTML = buildPravilaReportHtml();
+      preview.innerHTML = buildPravilaReportHtml() + signatureBlockHtml();
       return;
     }
     if(data.teams.length===0){
       preview.innerHTML = '<div class="empty-state">Nema unesenih ekipa za ispis.</div>';
       return;
     }
-    if(type==='rang') preview.innerHTML = buildRangReportHtml();
-    else if(type==='radni') preview.innerHTML = buildRadniListHtml();
-    else preview.innerHTML = buildPojedinacniHtml();
+    if(type==='rang') preview.innerHTML = buildRangReportHtml() + signatureBlockHtml();
+    else if(type==='radni') preview.innerHTML = buildRadniListHtml() + signatureBlockHtml();
+    else preview.innerHTML = buildPojedinacniHtml() + signatureBlockHtml();
+  }
+
+  // Mjesto za potpis glavnog sudca na dnu svakog ispisa.
+  function signatureBlockHtml(){
+    return '<div class="sign-block"><div class="sign-line"></div><div class="sign-label">Glavni sudac</div></div>';
   }
 
   function buildPravilaReportHtml(){
