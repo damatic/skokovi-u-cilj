@@ -277,6 +277,7 @@ body.spectator-mode #authBar, body.spectator-mode #backupCard{display:none !impo
 .auth-bar.ok{background:#E9F6EE; border-color:#A6D7B7; color:#1F5C38;}
 .auth-bar .grow{flex:1; min-width:200px;}
 body.locked .lockable{pointer-events:none; opacity:.45;}
+body.auth-pending .lockable{pointer-events:none;}
 .backup-row{display:flex; gap:10px; flex-wrap:wrap; margin:10px 0;}
 .hist-item{display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border:1px solid var(--line); border-radius:8px; margin-bottom:6px; font-size:13.5px;}
 body.spectator-mode #rangRoundRow + #rangStats{margin-top:0;}
@@ -622,6 +623,7 @@ body.archive-mode #tab-pravila textarea{
   // Samo ovi računi smiju uređivati (stvarnu zaštitu daju Firestore pravila).
   const ADMIN_EMAILS = ['d.matic91@gmail.com'];
   let currentUser = null;
+  let authReady = false;
   function canEdit(){ return !!currentUser && ADMIN_EMAILS.indexOf((currentUser.email||'').toLowerCase()) >= 0; }
   let dbLoaded = false;
   let lastSaved = null;
@@ -1020,6 +1022,17 @@ body.archive-mode #tab-pravila textarea{
   // ---------------- Prijava ----------------
   function applyLockState(){
     if(SPECTATOR_MODE) return;
+    if(!authReady){
+      document.body.classList.add('auth-pending');
+      const b0 = document.getElementById('authBar');
+      b0.className = 'auth-bar no-print';
+      b0.style.display = '';
+      document.getElementById('authBarText').textContent = 'Provjera prijave…';
+      document.getElementById('authBtn').style.visibility = 'hidden';
+      return;
+    }
+    document.body.classList.remove('auth-pending');
+    document.getElementById('authBtn').style.visibility = '';
     const locked = !canEdit();
     document.body.classList.toggle('locked', locked);
     document.querySelectorAll('.lockable').forEach(el=>{ try{ el.inert = locked; } catch(e){} });
@@ -1057,6 +1070,7 @@ body.archive-mode #tab-pravila textarea{
     });
     auth.onAuthStateChanged(async user=>{
       currentUser = user;
+      authReady = true;
       applyLockState();
       if(canEdit() && !dbLoaded && !archiveMode){
         await loadData();
