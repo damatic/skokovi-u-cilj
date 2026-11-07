@@ -225,6 +225,22 @@ table.team-rank-table th, table.team-rank-table td{border:1px solid var(--line);
 table.team-rank-table thead th{background:var(--navy-700); color:var(--white); font-family:'Big Shoulders'; text-transform:uppercase; font-size:12.5px; text-align:left;}
 table.team-rank-table td.place{font-family:'Roboto Mono'; font-weight:700; text-align:center; width:50px;}
 table.team-rank-table td.num{font-family:'Roboto Mono'; text-align:center; width:60px;}
+table.team-rank-table tr.team-row{cursor:pointer;}
+table.team-rank-table tr.team-row:hover td{background:#F4F1E8;}
+table.team-rank-table tr.team-row:focus-visible{outline:2px solid var(--navy-700);outline-offset:-2px;}
+table.team-rank-table .chev{display:inline-block; width:14px; color:var(--ink-dim); font-size:11px; transition:transform .15s;}
+table.team-rank-table tr.team-row.expanded .chev{transform:rotate(90deg);}
+table.team-rank-table tr.team-row.expanded td{background:#E8EEF6;}
+table.team-rank-table tr.member-row{display:none; background:#FAF8F2;}
+table.team-rank-table tr.member-row.open{display:table-row;}
+table.team-rank-table tr.member-row td{padding-top:6px; padding-bottom:6px;}
+table.team-rank-table .member-name{font-size:13px;}
+table.team-rank-table .member-letter{display:inline-block; width:20px; font-family:'Roboto Mono'; font-weight:700; color:var(--ink-dim);}
+table.team-rank-table td.jump-cell{font-family:'Roboto Mono'; text-align:center; width:48px; font-size:11.5px; line-height:1.4; padding:6px 3px; color:var(--ink-dim); border-left:1px dashed var(--line);}
+table.team-rank-table td.jump-cell .jp{font-weight:700; color:var(--ink);}
+table.team-rank-table td.jump-cell .jc{display:block; font-size:10px; white-space:nowrap;}
+table.team-rank-table th.jump-head{text-align:center; width:48px;}
+
 table.team-rank-table td.result-cell{font-family:'Roboto Mono'; text-align:center; width:130px; line-height:1.35;}
 table.team-rank-table td.result-cell .pts-big{font-size:17px; font-weight:700; color:var(--navy-800);}
 table.team-rank-table td.result-cell .pts-unit{font-size:11px; color:var(--ink-dim); font-family:'Inter'; text-transform:uppercase; margin-left:4px;}
@@ -323,7 +339,7 @@ body.spectator-mode #rulesReadonly{display:block;}
   table.rank-table td.result-cell{width:auto;}
 }
 @media (max-width:519px){
-  table.rank-table th.jump-head, table.rank-table td.jump-cell{display:none;}
+  table.rank-table th.jump-head, table.rank-table td.jump-cell, table.team-rank-table th.jump-head, table.team-rank-table td.jump-cell{display:none;}
   .rot-hint{display:block;}
 }
 .live-badge{
@@ -647,6 +663,7 @@ body.archive-mode #tab-pravila textarea{
   const ADMIN_EMAILS = ['d.matic91@gmail.com'];
   let currentUser = null;
   let authReady = false;
+  const expandedTeams = new Set(); // ekipe čiji su članovi otvoreni u rang listi
   function canEdit(){ return !!currentUser && ADMIN_EMAILS.indexOf((currentUser.email||'').toLowerCase()) >= 0; }
   let dbLoaded = false;
   let lastSaved = null;
@@ -1749,26 +1766,32 @@ body.archive-mode #tab-pravila textarea{
       const eligibleComps = team.competitors.filter(comp => competitorEligible(comp, onlySubRoundCompetitors));
       let totalPoints=0, totalCm=0, jumpsEntered=0;
       const pointsValues=[], cmValues=[];
+      const series = Array.from({length:groupSize}, ()=>({p:0, cm:0}));
+      const members = [];
       eligibleComps.forEach(comp=>{
         const id = competitorId(team.number, comp.letter);
         const arr = data.results[id] || [];
         const slice = sliceJumps(arr, startIdx, endIdx, n);
-        slice.forEach(r=>{
+        const m = { letter: comp.letter, ime: isMissing(comp) ? '(prazno mjesto)' : comp.ime, missing: isMissing(comp), cells: [], p:0, cm:0 };
+        slice.forEach((r, si)=>{
+          let cp, cc;
           if(r && r.points!==null && r.points!==undefined && r.cm!==null && r.cm!==undefined){
-            totalPoints += r.points; totalCm += r.cm;
-            pointsValues.push(r.points); cmValues.push(r.cm);
-            jumpsEntered++;
+            cp = r.points; cc = r.cm; jumpsEntered++;
           } else {
             // Serija koja nije skočena (ili prazno mjesto u ekipi) = 0 punata, 16 cm.
-            totalCm += 16;
-            pointsValues.push(0); cmValues.push(16);
+            cp = 0; cc = 16;
           }
+          totalPoints += cp; totalCm += cc;
+          pointsValues.push(cp); cmValues.push(cc);
+          series[si].p += cp; series[si].cm += cc;
+          m.cells.push({p:cp, cm:cc}); m.p += cp; m.cm += cc;
         });
+        members.push(m);
       });
       return {
         teamNumber: team.number, name: team.name, cc: team.country || '', missing: eligibleComps.length===0,
         jumpsEntered, totalJumps: groupSize * eligibleComps.length,
-        totalPoints, totalCm, pointsValues, cmValues
+        totalPoints, totalCm, pointsValues, cmValues, series, members
       };
     })
     .filter(t => t.totalJumps > 0); // teams with zero eligible competitors for this round don't appear at all
@@ -1831,14 +1854,23 @@ body.archive-mode #tab-pravila textarea{
       if(teamRanked.length===0){
         html += '<div class="empty-state">Još nema unesenih rezultata ni za jednu ekipu.</div>';
       } else {
-        html += '<table class="team-rank-table"><thead><tr><th>Mjesto</th><th class="hide-narrow">Br.</th><th>Naziv ekipe</th><th>Rezultat</th><th class="hide-narrow">Upisano</th></tr></thead><tbody>';
+        html += '<div class="rank-table-wrap"><table class="team-rank-table"><thead><tr><th>Mjesto</th><th class="hide-narrow">Br.</th><th>Naziv ekipe</th>';
+        labels.forEach(l=> html += '<th class="jump-head">'+l+'</th>');
+        html += '<th>Rezultat</th><th class="hide-narrow">Upisano</th></tr></thead><tbody>';
         teamRanked.forEach(t=>{
           const full = t.jumpsEntered === t.totalJumps;
-          html += '<tr><td class="place">'+alkaBadgeHtml(t.place)+'</td><td class="num hide-narrow">'+t.teamNumber+'</td><td>'+ccBadge(t.cc)+escapeHtml(t.name)+'</td>'+
-            '<td class="result-cell"><span class="pts-big">'+t.totalPoints+'</span><span class="pts-unit">punata</span><span class="cm-line">'+t.totalCm+' cm</span></td>'+
+          const open = expandedTeams.has(t.teamNumber);
+          html += '<tr class="team-row'+(open?' expanded':'')+'" data-team="'+t.teamNumber+'" tabindex="0" role="button" aria-expanded="'+open+'"><td class="place">'+alkaBadgeHtml(t.place)+'</td><td class="num hide-narrow">'+t.teamNumber+'</td><td><span class="chev">▸</span>'+ccBadge(t.cc)+escapeHtml(t.name)+'</td>';
+          t.series.forEach(sv=>{ html += '<td class="jump-cell"><span class="jp">'+sv.p+'</span><span class="jc">'+sv.cm+' cm</span></td>'; });
+          html += '<td class="result-cell"><span class="pts-big">'+t.totalPoints+'</span><span class="pts-unit">punata</span><span class="cm-line">'+t.totalCm+' cm</span></td>'+
             '<td class="progress hide-narrow'+(full?' full':'')+'">'+t.jumpsEntered+'/'+t.totalJumps+'</td></tr>';
+          t.members.forEach(m=>{
+            html += '<tr class="member-row'+(open?' open':'')+'" data-team="'+t.teamNumber+'"><td></td><td class="num hide-narrow">'+t.teamNumber+m.letter+'</td><td class="member-name"><span class="member-letter">'+m.letter+'</span>'+escapeHtml(m.ime)+'</td>';
+            m.cells.forEach(c=>{ html += '<td class="jump-cell"><span class="jp">'+c.p+'</span><span class="jc">'+c.cm+' cm</span></td>'; });
+            html += '<td class="result-cell"><span class="pts-big">'+m.p+'</span><span class="pts-unit">punata</span><span class="cm-line">'+m.cm+' cm</span></td><td class="hide-narrow"></td></tr>';
+          });
         });
-        html += '</tbody></table>';
+        html += '</tbody></table></div><div class="rot-hint">Kliknite ekipu za prikaz članova.</div>';
       }
       if(teamNotStarted.length>0){
         html += '<h3 style="margin-top:20px; font-size:13px; color:var(--ink-dim);">Ekipe koje još nisu skočile</h3>';
@@ -1900,6 +1932,29 @@ body.archive-mode #tab-pravila textarea{
     const html = row('Natjecanje', escapeHtml(eventTitleText())) + row('Mjesto', escapeHtml((c.eventLocation||'').trim())) + row('Datum', escapeHtml((c.eventDate||'').trim())) + row('Kontakt', contact) + row('Web', webHtml);
     el.innerHTML = html ? '<dl class="info-list">'+html+'</dl>' : '<div class="empty-state">Informacije još nisu unesene.</div>';
   }
+
+  // Klik na ekipu u rang listi otvara/zatvara njezine članove (samo kliknutu ekipu).
+  (function(){
+    const holder = document.getElementById('rangContent');
+    if(!holder) return;
+    function toggle(row){
+      const no = Number(row.dataset.team);
+      const open = !expandedTeams.has(no);
+      if(open) expandedTeams.add(no); else expandedTeams.delete(no);
+      row.classList.toggle('expanded', open);
+      row.setAttribute('aria-expanded', String(open));
+      holder.querySelectorAll('tr.member-row[data-team="'+no+'"]').forEach(r=> r.classList.toggle('open', open));
+    }
+    holder.addEventListener('click', e=>{
+      const row = e.target.closest && e.target.closest('tr.team-row');
+      if(row && holder.contains(row)) toggle(row);
+    });
+    holder.addEventListener('keydown', e=>{
+      if(e.key !== 'Enter' && e.key !== ' ') return;
+      const row = e.target.closest && e.target.closest('tr.team-row');
+      if(row){ e.preventDefault(); toggle(row); }
+    });
+  })();
 
   // ---------------- Pravila tab ----------------
   function renderPravilaTab(){
