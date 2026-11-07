@@ -278,6 +278,7 @@ body.spectator-mode #authBar, body.spectator-mode #backupCard{display:none !impo
 .auth-bar .grow{flex:1; min-width:200px;}
 body.locked .lockable{pointer-events:none; opacity:.45;}
 body.auth-pending .lockable{pointer-events:none;}
+.jump-cell.miss{opacity:.55;}
 body.locked #mainTabs, body.locked .tab-content, body.locked #archiveBanner,
 body.auth-pending #mainTabs, body.auth-pending .tab-content, body.auth-pending #archiveBanner{display:none !important;}
 #lockedCard{display:none; background:#fff; border:1px solid var(--line,#D8D5C8); border-radius:10px; padding:22px 18px; text-align:center;}
@@ -1712,7 +1713,7 @@ body.archive-mode #tab-pravila textarea{
         const pointsValues = enteredRows.map(r=>r.points);
         const cmValues = enteredRows.map(r=>r.cm);
         // Serije koje nisu skočene računaju se kao 0 punata i 16 cm.
-        if(!missing) for(let k=jumpsEntered;k<(endIdx-startIdx+1);k++){ pointsValues.push(0); cmValues.push(16); }
+        for(let k=jumpsEntered;k<(endIdx-startIdx+1);k++){ pointsValues.push(0); cmValues.push(16); }
         const totalPoints = pointsValues.reduce((a,b)=>a+b,0);
         const totalCm = cmValues.reduce((a,b)=>a+b,0);
         list.push({
@@ -1794,7 +1795,7 @@ body.archive-mode #tab-pravila textarea{
           if(r && r.points!==null && r.points!==undefined && r.cm!==null && r.cm!==undefined){
             html += '<td class="jump-cell"><span class="jp">'+r.points+'</span><span class="jc">'+r.cm+' cm</span></td>';
           } else {
-            html += '<td class="jump-cell empty">—</td>';
+            html += '<td class="jump-cell miss"><span class="jp">0</span><span class="jc">16 cm</span></td>';
           }
         });
         html += '<td class="result-cell"><span class="pts-big">'+c.totalPoints+'</span><span class="pts-unit">punata</span><span class="cm-line">'+c.totalCm+' cm</span></td>'+
