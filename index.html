@@ -450,10 +450,14 @@ body.archive-mode #tab-pravila textarea{
         <div class="field grow"><label>Datum</label><input type="text" id="eventDateInput" placeholder="npr. 22.–23.8.2026."></div>
       </div>
       <div class="row">
+        <div class="field grow"><label>Direktor natjecanja</label><input type="text" id="eventDirectorInput" placeholder="ime i prezime"></div>
+        <div class="field grow"><label>Glavni sudac</label><input type="text" id="eventJudgeInput" placeholder="ime i prezime"></div>
+      </div>
+      <div class="row">
         <div class="field grow"><label>Kontakt</label><input type="text" id="eventContactInput" placeholder="npr. ime.prezime@primjer.hr · 091 000 0000"></div>
         <div class="field grow"><label>Web stranica</label><input type="text" id="eventWebInput" placeholder="npr. https://www.aeroklubsinj.hr"></div>
       </div>
-      <div class="hint">Mjesto, datum, kontakt i web prikazuju se natjecateljima u javnom pregledu (tab "Informacije").</div>
+      <div class="hint">Mjesto, datum, direktor natjecanja, glavni sudac, kontakt i web prikazuju se natjecateljima u javnom pregledu (tab "Informacije").</div>
       <div class="row" style="margin-top:14px;">
         <div class="field small">
           <label>Broj serija skokova</label>
@@ -761,7 +765,7 @@ body.archive-mode #tab-pravila textarea{
     if(!d.teams) d.teams = [];
     if(!d.results) d.results = {};
     if(d.rules === undefined) d.rules = '';
-    ['eventLocation','eventDate','eventContact','eventWeb'].forEach(k=>{ if(d.config[k] === undefined) d.config[k] = ''; });
+    ['eventLocation','eventDate','eventContact','eventWeb','eventDirector','eventJudge'].forEach(k=>{ if(d.config[k] === undefined) d.config[k] = ''; });
     d.teams.forEach(t=>{ if(t.country === undefined) t.country = ''; });
     return d;
   }
@@ -986,9 +990,9 @@ body.archive-mode #tab-pravila textarea{
     if(activeTab==='rang') renderRangTab();
     if(activeTab==='pravila') renderPravilaTab();
     if(activeTab==='ispis') renderIspisTab();
-    ['eventLocationInput','eventDateInput','eventContactInput','eventWebInput'].forEach(id=>{
+    ['eventLocationInput','eventDateInput','eventContactInput','eventWebInput','eventDirectorInput','eventJudgeInput'].forEach(id=>{
       const el = document.getElementById(id);
-      const key = {eventLocationInput:'eventLocation',eventDateInput:'eventDate',eventContactInput:'eventContact',eventWebInput:'eventWeb'}[id];
+      const key = {eventLocationInput:'eventLocation',eventDateInput:'eventDate',eventContactInput:'eventContact',eventWebInput:'eventWeb',eventDirectorInput:'eventDirector',eventJudgeInput:'eventJudge'}[id];
       if(el && document.activeElement !== el) el.value = data.config[key] || '';
     });
     renderInfoTab();
@@ -1305,7 +1309,7 @@ body.archive-mode #tab-pravila textarea{
       switchToNewEdition(newVal);
     });
 
-    [['eventLocationInput','eventLocation'],['eventDateInput','eventDate'],['eventContactInput','eventContact'],['eventWebInput','eventWeb']].forEach(pair=>{
+    [['eventLocationInput','eventLocation'],['eventDateInput','eventDate'],['eventContactInput','eventContact'],['eventWebInput','eventWeb'],['eventDirectorInput','eventDirector'],['eventJudgeInput','eventJudge']].forEach(pair=>{
       const el = document.getElementById(pair[0]);
       el.value = data.config[pair[1]] || '';
       el.addEventListener('input', ()=>{ data.config[pair[1]] = el.value; saveDataDebounced(500); });
@@ -2010,7 +2014,7 @@ body.archive-mode #tab-pravila textarea{
     const contact = escapeHtml((c.eventContact||'').trim()).replace(/([\w.+-]+@[\w-]+\.[\w.-]+)/g,'<a href="mailto:$1">$1</a>');
     let web = (c.eventWeb||'').trim();
     const webHtml = web ? '<a href="'+escapeAttr(/^https?:/i.test(web)?web:'https://'+web)+'" target="_blank" rel="noopener">'+escapeHtml(web)+'</a>' : '';
-    const html = row('Natjecanje', escapeHtml(eventTitleText())) + row('Mjesto', escapeHtml((c.eventLocation||'').trim())) + row('Datum', escapeHtml((c.eventDate||'').trim())) + row('Kontakt', contact) + row('Web', webHtml) + row('Sudionici', escapeHtml(data.teams.length ? eventCountsText() : ''));
+    const html = row('Natjecanje', escapeHtml(eventTitleText())) + row('Mjesto', escapeHtml((c.eventLocation||'').trim())) + row('Datum', escapeHtml((c.eventDate||'').trim())) + row('Direktor natjecanja', escapeHtml((c.eventDirector||'').trim())) + row('Glavni sudac', escapeHtml((c.eventJudge||'').trim())) + row('Kontakt', contact) + row('Web', webHtml) + row('Sudionici', escapeHtml(data.teams.length ? eventCountsText() : ''));
     el.innerHTML = html ? '<dl class="info-list">'+html+'</dl>' : '<div class="empty-state">Informacije još nisu unesene.</div>';
   }
 
@@ -2067,7 +2071,8 @@ body.archive-mode #tab-pravila textarea{
 
   // Mjesto za potpis glavnog sudca na dnu svakog ispisa.
   function signatureBlockHtml(){
-    return '<div class="sign-block"><div class="sign-line"></div><div class="sign-label">Glavni sudac</div></div>';
+    const judge = (data.config.eventJudge||'').trim();
+    return '<div class="sign-block"><div class="sign-line"></div><div class="sign-label">Glavni sudac'+(judge ? ': <b>'+escapeHtml(judge)+'</b>' : '')+'</div></div>';
   }
 
   function buildPravilaReportHtml(){
