@@ -278,6 +278,11 @@ body.spectator-mode #authBar, body.spectator-mode #backupCard{display:none !impo
 .auth-bar .grow{flex:1; min-width:200px;}
 body.locked .lockable{pointer-events:none; opacity:.45;}
 body.auth-pending .lockable{pointer-events:none;}
+body.locked #mainTabs, body.locked .tab-content, body.locked #archiveBanner,
+body.auth-pending #mainTabs, body.auth-pending .tab-content, body.auth-pending #archiveBanner{display:none !important;}
+#lockedCard{display:none; background:#fff; border:1px solid var(--line,#D8D5C8); border-radius:10px; padding:22px 18px; text-align:center;}
+#lockedCard p{margin:0 0 14px; font-size:15px;}
+body.locked #lockedCard{display:block;}
 .backup-row{display:flex; gap:10px; flex-wrap:wrap; margin:10px 0;}
 .hist-item{display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border:1px solid var(--line); border-radius:8px; margin-bottom:6px; font-size:13.5px;}
 body.spectator-mode #rangRoundRow + #rangStats{margin-top:0;}
@@ -370,6 +375,11 @@ body.archive-mode #tab-pravila textarea{
   <div class="auth-bar no-print" id="authBar" style="display:none;">
     <span class="grow" id="authBarText"></span>
     <button class="btn secondary" id="authBtn" type="button"></button>
+  </div>
+
+  <div id="lockedCard" class="no-print">
+    <p><strong>Uređivanje je dostupno samo administratoru.</strong><br>Prijavite se ili pogledajte javni prikaz rezultata.</p>
+    <a class="btn secondary" href="?public=1" style="text-decoration:none; display:inline-block;">Javni prikaz rezultata</a>
   </div>
 
   <div class="tabs no-print" id="mainTabs">
