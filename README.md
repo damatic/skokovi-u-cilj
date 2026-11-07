@@ -31,11 +31,11 @@ Poruke commitova uvijek pišemo na engleskom. GitHub Pages se osvježi nakon pus
 
 ## Prijava i administratori
 
-Uređivati može samo prijavljeni administrator (Google prijava). Javni prikaz ne traži prijavu.
+Uređivati može samo prijavljeni administrator (Google prijava). Javni prikaz (`?rezultati`) ne traži prijavu.
 
-Prava pisanja određuju **dva mjesta koja se moraju poklapati**:
+Popis administratora **nije u kodu stranice**, nego samo u Firestore pravilima. Nakon prijave aplikacija pokuša pročitati dokument `admin/provjera`. To pravila dopuštaju samo administratorima: ako uspije, sučelje se otključa, a ako ne, ostaje zaključano. Pisanje u bazu svejedno provjeravaju pravila na Googleovim serverima.
 
-1. **Firestore pravila** (stvarna zaštita), Firebase konzola → Firestore → Rules:
+Firestore pravila (Firebase konzola → Firestore → Rules):
 
 ```
 rules_version = '2';
@@ -48,13 +48,18 @@ service cloud.firestore {
                         'd.matic91@gmail.com'
                       ];
     }
+    match /admin/{doc} {
+      allow read: if request.auth != null
+                  && request.auth.token.email in [
+                        'd.matic91@gmail.com'
+                      ];
+      allow write: if false;
+    }
   }
 }
 ```
 
-2. **`ADMIN_EMAILS` u `index.html`** — odlučuje samo što sučelje prikazuje (zaključano ili otključano).
-
-Novi administrator = dodati njegovu Gmail adresu na oba mjesta, pa Publish pravila i push `index.html`. Dodavanje korisnika u Firebase Authentication samo po sebi ne daje pravo uređivanja.
+Novi administrator = dodati njegovu Gmail adresu na **oba** popisa u pravilima (`natjecanja` i `admin`) i kliknuti Publish. `index.html` se ne mijenja. Adresa mora biti napisana identično, malim slovima.
 
 ## Jednokratne Firebase postavke
 
@@ -106,7 +111,7 @@ Spremanje je po poljima (ne piše se cijeli dokument), pa dva uređaja mogu isto
 | `auth/unauthorized-domain` | Dodaj domenu u Authorized domains. |
 | `auth/operation-not-supported-in-this-environment` | Otvoreno preko `file://`. Koristi GitHub Pages ili `localhost`. |
 | Nakon pusha nema promjene | Cache: Ctrl+F5 ili `?v=2` na kraj adrese. |
-| Prijavljen, a sučelje zaključano | Mail nije u `ADMIN_EMAILS` i/ili u pravilima. |
+| Prijavljen, a sučelje zaključano | Mail nije na popisu u Firestore pravilima (oba bloka: `natjecanja` i `admin`). |
 
 ## Ideje za kasnije
 

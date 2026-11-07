@@ -671,12 +671,13 @@ body.archive-mode #tab-pravila textarea{
   // Rad bez interneta: upisi se čuvaju na uređaju i šalju kad se veza vrati.
   try{ db.enablePersistence({ synchronizeTabs: true }).catch(function(e){ console.warn('Offline mod nije dostupan:', e && e.code); }); } catch(e){ console.warn('Offline mod nije dostupan', e); }
   const auth = firebase.auth();
-  // Samo ovi računi smiju uređivati (stvarnu zaštitu daju Firestore pravila).
-  const ADMIN_EMAILS = ['d.matic91@gmail.com'];
+  // Tko je administrator, određuju Firestore pravila (popis adresa nije u kodu stranice).
+  // Nakon prijave aplikacija pokuša pročitati dokument admin/provjera, što pravila dopuštaju samo administratorima.
+  let isAdminUser = false;
   let currentUser = null;
   let authReady = false;
   const expandedTeams = new Set(); // ekipe čiji su članovi otvoreni u rang listi
-  function canEdit(){ return !!currentUser && ADMIN_EMAILS.indexOf((currentUser.email||'').toLowerCase()) >= 0; }
+  function canEdit(){ return !!currentUser && isAdminUser; }
   let dbLoaded = false;
   let lastSaved = null;
   let pendingSync = false;
@@ -1121,8 +1122,32 @@ body.archive-mode #tab-pravila textarea{
         else alert('Prijava nije uspjela: ' + ((e && e.message) || e));
       }
     });
+    async function probeAdmin(user){
+      const hintKey = 'apk-admin-' + user.uid;
+      try{
+        await Promise.race([
+          db.collection('admin').doc('provjera').get({ source: 'server' }),
+          new Promise((_, rej)=> setTimeout(()=> rej({ code: 'timeout' }), 8000))
+        ]);
+        try{ localStorage.setItem(hintKey, '1'); }catch(e){}
+        return true;
+      } catch(e){
+        if(e && e.code === 'permission-denied'){
+          try{ localStorage.removeItem(hintKey); }catch(_){}
+          return false;
+        }
+        // Bez veze: koristi zadnji poznati rezultat (stvarnu zaštitu svejedno daju pravila).
+        try{ return localStorage.getItem(hintKey) === '1'; } catch(_){ return false; }
+      }
+    }
     auth.onAuthStateChanged(async user=>{
       currentUser = user;
+      isAdminUser = false;
+      if(user){
+        authReady = false;
+        applyLockState();
+        isAdminUser = await probeAdmin(user);
+      }
       authReady = true;
       applyLockState();
       if(canEdit() && !dbLoaded && !archiveMode){
