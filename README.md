@@ -61,6 +61,15 @@ service cloud.firestore {
 
 Novi administrator = dodati njegovu Gmail adresu na **oba** popisa u pravilima (`natjecanja` i `admin`) i kliknuti Publish. `index.html` se ne mijenja. Adresa mora biti napisana identično, malim slovima.
 
+### Računi za prijavu
+
+| Račun | Namjena |
+|---|---|
+| `d.matic91@gmail.com` | glavni administrator (vlasnik projekta) |
+| `skydivetestapp@gmail.com` | račun za spajanje na aplikaciju (testiranje i prijava) |
+
+Da bi račun mogao uređivati, njegova adresa mora biti na oba popisa u Firestore pravilima (`natjecanja` i `admin`). Bez toga se može prijaviti, ali vidi samo pregled ("nema pravo uređivanja").
+
 ## Jednokratne Firebase postavke
 
 Napravljeno jednom, ovdje zapisano za slučaj novog projekta:
