@@ -337,7 +337,15 @@ body.spectator-mode #rulesReadonly{display:block;}
 .stat-box{background:var(--paper-dim); border-radius:8px; padding:8px 10px; text-align:center;}
 .stat-box b{display:block; font-family:'Big Shoulders'; font-size:24px; color:var(--navy-800);}
 .stat-box span{font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.04em;}
-.info-list{display:grid; grid-template-columns:110px 1fr; gap:10px 14px; font-size:14.5px;}
+.info-list{display:grid; grid-template-columns:minmax(90px,200px) minmax(0,1fr); gap:10px 14px; font-size:14.5px;}
+.info-list dd{margin:0; min-width:0; overflow-wrap:anywhere; word-break:break-word;}
+.info-list dt{overflow-wrap:anywhere;}
+@media(max-width:480px){
+  .info-list{grid-template-columns:minmax(0,1fr); gap:0;}
+  .info-list dt{font-size:12px; text-transform:uppercase; letter-spacing:.04em; margin-top:12px;}
+  .info-list dt:first-child{margin-top:0;}
+  .info-list dd{margin-top:2px;}
+}
 .info-list dt{color:var(--ink-dim);}
 @media (max-width:899px){
   table.rank-table .hide-narrow, table.team-rank-table .hide-narrow{display:none;}
