@@ -147,6 +147,44 @@ button.btn-icon.danger{color:var(--danger); border-color:#E7C3BD;}
   background:var(--navy-800); color:var(--white); font-family:'Roboto Mono'; font-size:11px; font-weight:700;
 }
 
+/* Competitor slots: name on its own row, gender + B/Č/A on the next */
+.members-grid{grid-template-columns:minmax(0,1fr);}
+.member-slot{margin-bottom:0;}
+.member-top{display:flex; align-items:center; gap:8px;}
+.member-top input{flex:1 1 auto; min-width:0;}
+.member-opt{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding-left:28px; margin-top:6px;}
+.member-opt select{padding:6px 8px; font-size:13px; width:auto; max-width:160px;}
+.member-opt .member-alkarski-label{margin-top:0;}
+
+/* Collapsible settings */
+.settings-card{padding:0;}
+.acc-h{
+  width:100%; display:flex; align-items:center; gap:10px; text-align:left; background:none; border:0; cursor:pointer;
+  padding:16px 20px; color:var(--navy-800); font-family:inherit;
+}
+.acc-h .ring-dot{width:10px; height:10px; border-radius:50%; background:var(--orange); flex:none;}
+.acc-txt{flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:2px;}
+.acc-title{font-family:'Big Shoulders',sans-serif; font-weight:700; letter-spacing:.02em; text-transform:uppercase; font-size:17px;}
+.acc-sum{font-size:12.5px; font-weight:400; color:var(--ink-dim); overflow-wrap:anywhere;}
+.settings-card.open .acc-sum{display:none;}
+.chev{flex:none; color:var(--ink-dim); transition:transform .15s ease;}
+.settings-card.open .chev{transform:rotate(180deg);}
+.acc-body{display:none; padding:0 20px 20px; border-top:1px solid var(--line); padding-top:16px;}
+.settings-card.open .acc-body{display:block;}
+
+/* Team list header */
+.list-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px;}
+.list-head h2{margin-bottom:0; flex-wrap:wrap;}
+.list-count{font-family:'Inter',sans-serif; font-size:12px; font-weight:600; color:var(--ink-dim); text-transform:none; letter-spacing:0;}
+.new-team-btn, .sheet-close, .sheet-scrim{display:none;}
+.sheet-f{margin-top:10px;}
+.team-id-row{flex-wrap:nowrap; gap:10px;}
+.team-id-row .field{min-width:0; margin-bottom:8px;}
+.team-id-row .field.small{flex:0 0 84px; max-width:84px;}
+.team-id-row .field.grow{flex:1 1 0;}
+.team-id-row input{width:100%;}
+.team-card .only-cup{color:var(--danger); font-weight:600;}
+
 /* Team list cards */
 .team-card{
   border:1.5px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-bottom:10px;
@@ -390,6 +428,35 @@ body.archive-mode #tab-pravila textarea{
   .tab-btn{font-size:12.5px; padding:8px 14px;}
   table.results-table input[type=number]{width:44px;}
 }
+/* Below laptop width the team form becomes a bottom sheet (centred dialog on tablets) */
+@media (max-width:1149px){
+  .new-team-btn{display:inline-block; padding:9px 14px; white-space:nowrap;}
+  .sheet-close{display:inline-block; padding:8px 14px;}
+  #cancelEditBtn{display:inline-block !important;}
+  .team-form-card{
+    position:fixed; left:0; right:0; bottom:0; z-index:60; margin:0; padding:0; border-radius:16px 16px 0 0; border-width:1px 0 0;
+    max-height:92vh; max-height:92dvh; display:flex; flex-direction:column;
+    box-shadow:0 -10px 30px rgba(11,33,56,.25);
+    transform:translateY(105%); visibility:hidden; transition:transform .22s ease, visibility 0s linear .22s;
+  }
+  body.team-sheet-open .team-form-card{transform:none; visibility:visible; transition:transform .22s ease;}
+  .sheet-h{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 16px 6px;}
+  .sheet-h h2{margin-bottom:0;}
+  .sheet-b{overflow-y:auto; padding:6px 16px 12px; flex:1 1 auto; -webkit-overflow-scrolling:touch;}
+  .sheet-f{flex-wrap:nowrap; gap:10px; margin:0; padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px)); border-top:1px solid var(--line); background:var(--white);}
+  .sheet-f .btn{flex:1 1 0; padding:12px 10px;}
+  .sheet-scrim{display:block; position:fixed; inset:0; z-index:55; background:rgba(8,16,26,.5); opacity:0; pointer-events:none; transition:opacity .18s ease;}
+  body.team-sheet-open .sheet-scrim{opacity:1; pointer-events:auto;}
+  body.team-sheet-open{overflow:hidden;}
+}
+@media (min-width:600px) and (max-width:1149px){
+  .team-form-card{left:50%; right:auto; width:min(560px,94vw); bottom:16px; border-radius:16px; border-width:1px; transform:translate(-50%,110%);}
+  body.team-sheet-open .team-form-card{transform:translate(-50%,0);}
+  #teamsList{display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:stretch;}
+  #teamsList .team-card{margin-bottom:0;}
+  #teamsList .empty-state{grid-column:1 / -1;}
+}
+@media (prefers-reduced-motion:reduce){ .team-form-card, .sheet-scrim, .chev{transition:none !important;} }
 @media (min-width:1150px){
   .ekipe-columns{display:grid; grid-template-columns:minmax(360px,480px) 1fr; gap:20px; align-items:start;}
   .ekipe-columns .card{margin-bottom:0;}
@@ -445,8 +512,13 @@ body.archive-mode #tab-pravila textarea{
   <!-- ================= EKIPE TAB ================= -->
   <div class="tab-content active lockable" id="tab-ekipe">
 
-    <div class="card">
-      <h2><span class="ring-dot"></span>Postavke natjecanja</h2>
+    <div class="card settings-card" id="settingsCard">
+      <button type="button" class="acc-h" id="settingsToggle" aria-expanded="false" aria-controls="settingsBody">
+        <span class="ring-dot"></span>
+        <span class="acc-txt"><span class="acc-title">Postavke natjecanja</span><span class="acc-sum" id="settingsSummary"></span></span>
+        <svg class="chev" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>
+      </button>
+      <div class="acc-body" id="settingsBody">
       <div class="row">
         <div class="field small" style="max-width:100px;">
           <label>Redni broj</label>
@@ -486,14 +558,19 @@ body.archive-mode #tab-pravila textarea{
         </div>
       </div>
       <div class="hint">Ako smanjite broj skokova, rezultati za skokove iznad novog broja bit će trajno obrisani. Kod 9 skokova, rang lista automatski nudi i podjelu na Bara (I–III) / Čoja (IV–VI) / Alka (VII–IX).</div>
+      </div>
     </div>
 
     <div class="ekipe-columns">
-      <div class="card">
-        <h2><span class="ring-dot"></span>Dodaj / uredi ekipu</h2>
+      <div class="card team-form-card" id="teamFormCard" role="dialog" aria-labelledby="teamSheetTitle">
+        <div class="sheet-h">
+          <h2><span class="ring-dot"></span><span id="teamSheetTitle">Nova ekipa</span></h2>
+          <button class="btn secondary sheet-close" id="teamSheetClose" type="button">Zatvori</button>
+        </div>
+        <div class="sheet-b">
         <div class="hint">Ekipa uvijek ima 5 mjesta (A–E). Ostavite ime praznim ako natjecatelj fali — automatski dobiva 0 punata i 16 cm u svakom skoku.</div>
         <input type="hidden" id="editingTeamId" value="">
-        <div class="row">
+        <div class="row team-id-row">
           <div class="field small">
             <label>Broj ekipe</label>
             <input type="number" id="teamNumber" min="1">
@@ -502,24 +579,29 @@ body.archive-mode #tab-pravila textarea{
             <label>Naziv ekipe / Klub</label>
             <input type="text" id="teamName" placeholder="npr. AK Sinj">
           </div>
-          <div class="field small" style="max-width:90px;">
+          <div class="field small">
             <label>Država</label>
             <input type="text" id="teamCountry" maxlength="3" placeholder="HR" style="text-transform:uppercase;">
           </div>
         </div>
         <div class="hint" id="teamAlkarskiHint">Kod svakog natjecatelja označite sudjeluje li u Bara/Čoja/Alka poretku — u ukupnom poretku svi natjecatelji sudjeluju bez obzira na ovu oznaku.</div>
         <div class="members-grid" id="membersGrid"></div>
-        <div class="row" style="margin-top:10px;">
+        </div>
+        <div class="sheet-f row">
           <button class="btn" id="saveTeamBtn">Spremi ekipu</button>
-          <button class="btn secondary" id="cancelEditBtn" style="display:none;">Odustani od uređivanja</button>
+          <button class="btn secondary" id="cancelEditBtn" style="display:none;">Odustani</button>
         </div>
       </div>
 
       <div class="card list-card">
-        <h2><span class="ring-dot"></span>Popis ekipa</h2>
+        <div class="list-head">
+          <h2><span class="ring-dot"></span>Popis ekipa <span class="list-count" id="teamsCount"></span></h2>
+          <button class="btn new-team-btn" id="newTeamBtn" type="button">+ Nova ekipa</button>
+        </div>
         <div id="teamsList"></div>
       </div>
     </div>
+    <div class="sheet-scrim" id="teamSheetScrim"></div>
 
   </div>
 
@@ -990,6 +1072,14 @@ body.archive-mode #tab-pravila textarea{
     saveTimer = setTimeout(()=>{ saveTimer = null; saveData(); }, delay||600);
   }
 
+  function updateSettingsSummary(){
+    const el = document.getElementById('settingsSummary');
+    if(!el) return;
+    const v = id => { const i = document.getElementById(id); return i ? i.value.trim() : ''; };
+    const parts = [v('eventEditionInput'), v('eventNameInput'), v('eventLocationInput'), v('eventDateInput')].filter(Boolean);
+    el.textContent = parts.length ? parts.join(' · ') : 'Još nije postavljeno';
+  }
+
   function fullRerenderAfterRemoteUpdate(){
     renderHeaderTitle();
     renderTeamsList();
@@ -1009,6 +1099,7 @@ body.archive-mode #tab-pravila textarea{
       if(el && document.activeElement !== el) el.value = data.config[key] || '';
     });
     renderInfoTab();
+    updateSettingsSummary();
   }
 
   // ---------------- Edition switching (new competition = new archived document) ----------------
@@ -1388,9 +1479,10 @@ body.archive-mode #tab-pravila textarea{
       const spolVal = existing && existing.spol ? existing.spol : '';
       const div = document.createElement('div');
       div.className = 'field member-slot';
-      div.innerHTML = '<label><span class="letter-badge">'+letter+'</span> Natjecatelj '+letter+'</label>'+
-        '<input type="text" data-letter="'+letter+'" class="member-input" placeholder="Ime i prezime (ostavi prazno ako fali)" value="'+escapeAttr(val)+'">'+
-        '<select data-letter="'+letter+'" class="member-spol" style="margin-top:6px; padding:6px 8px; font-size:13px; max-width:160px;">'+
+      div.innerHTML = '<div class="member-top"><span class="letter-badge">'+letter+'</span>'+
+        '<input type="text" data-letter="'+letter+'" class="member-input" aria-label="Natjecatelj '+letter+'" placeholder="Natjecatelj '+letter+': ime i prezime" value="'+escapeAttr(val)+'"></div>'+
+        '<div class="member-opt">'+
+        '<select data-letter="'+letter+'" class="member-spol" aria-label="Spol, natjecatelj '+letter+'">'+
           '<option value=""'+(spolVal===''?' selected':'')+'>Spol: —</option>'+
           '<option value="M"'+(spolVal==='M'?' selected':'')+'>Muškarac</option>'+
           '<option value="Ž"'+(spolVal==='Ž'?' selected':'')+'>Žena</option>'+
@@ -1398,7 +1490,7 @@ body.archive-mode #tab-pravila textarea{
         '<label class="member-alkarski-label" style="display:'+(showAlkarski?'flex':'none')+';">'+
           '<input type="checkbox" data-letter="'+letter+'" class="member-alkarski-checkbox" '+(alkarskiChecked?'checked':'')+'>'+
           'Bara/Čoja/Alka'+
-        '</label>';
+        '</label></div>';
       grid.appendChild(div);
     });
     
@@ -1443,7 +1535,13 @@ body.archive-mode #tab-pravila textarea{
     buildMembersGrid(null);
     document.getElementById('cancelEditBtn').style.display = 'none';
     document.getElementById('saveTeamBtn').textContent = 'Spremi ekipu';
+    document.getElementById('teamSheetTitle').textContent = 'Nova ekipa';
   }
+
+  // Obrazac za ekipu: ispod 1150 px je donji list (na tabletu prozor), na laptopu je uvijek vidljiv.
+  function isSheetMode(){ return window.matchMedia('(max-width:1149px)').matches; }
+  function openTeamSheet(){ if(isSheetMode()) document.body.classList.add('team-sheet-open'); }
+  function closeTeamSheet(){ document.body.classList.remove('team-sheet-open'); }
 
   function loadTeamIntoForm(team){
     document.getElementById('editingTeamId').value = team.number;
@@ -1453,7 +1551,9 @@ body.archive-mode #tab-pravila textarea{
     buildMembersGrid(team.competitors);
     document.getElementById('cancelEditBtn').style.display = '';
     document.getElementById('saveTeamBtn').textContent = 'Spremi izmjene';
-    document.getElementById('tab-ekipe').scrollIntoView({behavior:'smooth'});
+    document.getElementById('teamSheetTitle').textContent = 'Uredi ekipu '+team.number;
+    if(isSheetMode()) openTeamSheet();
+    else document.getElementById('tab-ekipe').scrollIntoView({behavior:'smooth'});
   }
 
   function saveTeamFromForm(){
@@ -1499,6 +1599,7 @@ body.archive-mode #tab-pravila textarea{
     resetTeamForm();
     renderTeamsList();
     populateTeamSelect();
+    closeTeamSheet();
   }
 
   function deleteTeam(number){
@@ -1514,6 +1615,13 @@ body.archive-mode #tab-pravila textarea{
 
   function renderTeamsList(){
     const wrap = document.getElementById('teamsList');
+    const countEl = document.getElementById('teamsCount');
+    if(countEl){
+      const nT = data.teams.length;
+      const nC = data.teams.reduce((n,t)=> n + t.competitors.filter(c=>!isMissing(c)).length, 0);
+      const tw = (nT%10===1 && nT%100!==11) ? 'ekipa' : ((nT%10>=2 && nT%10<=4 && (nT%100<12 || nT%100>14)) ? 'ekipe' : 'ekipa');
+      countEl.textContent = nT ? (nT+' '+tw+' · '+nC+' '+(nC===1?'natjecatelj':'natjecatelja')) : '';
+    }
     if(data.teams.length===0){
       wrap.innerHTML = '<div class="empty-state">Još nema unesenih ekipa.</div>';
       return;
@@ -1525,7 +1633,7 @@ body.archive-mode #tab-pravila textarea{
       const membersHtml = team.competitors.map(c=>{
         const label = c.letter + ' — ' + (c.ime && c.ime.trim() ? escapeHtml(c.ime) + (c.spol ? ' ('+c.spol+')' : '') : 'prazno');
         const excluded = roundsAvailable() && !isMissing(c) && c.alkarski === false;
-        return '<span class="chip'+(isMissing(c)?' missing':'')+'">'+label+(excluded ? ' <span style="color:var(--danger); font-weight:600;">✕B/Č/A</span>' : '')+'</span>';
+        return '<span class="chip'+(isMissing(c)?' missing':'')+'">'+label+(excluded ? ' <span class="only-cup" title="Ne sudjeluje u Bara/Čoja/Alka">samo Kup</span>' : '')+'</span>';
       }).join('');
       div.innerHTML =
         '<div class="info">'+
@@ -2269,7 +2377,22 @@ body.archive-mode #tab-pravila textarea{
     }
 
     document.getElementById('saveTeamBtn').addEventListener('click', saveTeamFromForm);
-    document.getElementById('cancelEditBtn').addEventListener('click', resetTeamForm);
+    document.getElementById('cancelEditBtn').addEventListener('click', ()=>{ resetTeamForm(); closeTeamSheet(); });
+    document.getElementById('newTeamBtn').addEventListener('click', ()=>{
+      if(document.getElementById('editingTeamId').value) resetTeamForm();
+      openTeamSheet();
+    });
+    document.getElementById('teamSheetClose').addEventListener('click', closeTeamSheet);
+    document.getElementById('teamSheetScrim').addEventListener('click', closeTeamSheet);
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeTeamSheet(); });
+    document.querySelectorAll('.tab-btn').forEach(b=> b.addEventListener('click', closeTeamSheet));
+    const settingsCard = document.getElementById('settingsCard');
+    const settingsToggle = document.getElementById('settingsToggle');
+    function setSettingsOpen(o){ settingsCard.classList.toggle('open', o); settingsToggle.setAttribute('aria-expanded', o ? 'true' : 'false'); }
+    settingsToggle.addEventListener('click', ()=> setSettingsOpen(!settingsCard.classList.contains('open')));
+    setSettingsOpen(window.matchMedia('(min-width:900px)').matches);
+    document.getElementById('settingsBody').addEventListener('input', updateSettingsSummary);
+    updateSettingsSummary();
     document.getElementById('teamSelectForResults').addEventListener('change', renderResultsGrid);
     document.getElementById('activeSeriesSelect').addEventListener('change', e=>{
       data.config.activeSeries = parseInt(e.target.value, 10) || 0;
