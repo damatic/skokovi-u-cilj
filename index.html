@@ -2072,13 +2072,14 @@ body.archive-mode #tab-pravila textarea{
       arr.forEach(r=>{ totalPts += (r.points||0); totalCm += (r.cm||0); });
 
       const nameCell = comp.letter + (comp.ime && comp.ime.trim() ? ' — '+escapeHtml(comp.ime) : '');
+      const who = escapeAttr(comp.letter + (comp.ime && comp.ime.trim() ? ' ' + comp.ime.trim() : ''));
 
       html += '<tr class="'+(missing?'missing-row':'')+'">';
       html += '<td class="competitor-name" rowspan="2">'+nameCell+'</td>';
       html += '<td class="row-label">Punti</td>';
       arr.forEach((r,i)=>{
         const v = r.points===null||r.points===undefined ? '' : r.points;
-        html += '<td><input type="number" min="0" max="3" step="1" data-id="'+id+'" data-jump="'+i+'" data-field="points" value="'+v+'" '+(missing?'disabled':'')+'></td>';
+        html += '<td><input type="number" min="0" max="3" step="1" data-id="'+id+'" data-jump="'+i+'" data-field="points" aria-label="'+who+', serija '+(labels[i]||(i+1))+', bodovi" value="'+v+'" '+(missing?'disabled':'')+'></td>';
       });
       html += '<td class="sum-cell" rowspan="2" data-sum-points="'+id+'">'+totalPts+' pt<br>'+totalCm+' cm</td>';
       html += '</tr>';
@@ -2089,7 +2090,7 @@ body.archive-mode #tab-pravila textarea{
         const cmAuto = !missing && !!r.cmAuto;
         const v = cmAuto ? 16 : (r.cm===null||r.cm===undefined ? '' : r.cm);
         const cmDisabled = missing || cmAuto;
-        html += '<td><input type="number" min="0" max="16" step="1" data-id="'+id+'" data-jump="'+i+'" data-field="cm" value="'+v+'" '+(cmDisabled?'disabled':'')+'></td>';
+        html += '<td><input type="number" min="0" max="16" step="1" data-id="'+id+'" data-jump="'+i+'" data-field="cm" aria-label="'+who+', serija '+(labels[i]||(i+1))+', cm" value="'+v+'" '+(cmDisabled?'disabled':'')+'></td>';
       });
       html += '</tr>';
     });
