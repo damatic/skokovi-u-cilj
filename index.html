@@ -227,6 +227,98 @@ tr.missing-row td.competitor-name::after{
 }
 .autosave-note{font-size:12px; color:var(--ink-dim); margin-top:10px; display:flex; align-items:center; gap:6px;}
 
+/* ---------- Unos rezultata: biranje ekipe i serije, dva prikaza ---------- */
+#resSplit{display:block;}
+.res-side{display:none;}
+.rs-viewrow{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:12px 0;}
+.rs-viewrow .lbl{font-size:12px; color:var(--ink-dim);}
+.rs-seg{display:inline-flex; border:1.5px solid var(--navy-800); border-radius:999px; overflow:hidden;}
+.rs-seg button{font:700 12.5px 'Inter',sans-serif; padding:8px 14px; background:transparent; color:var(--ink); border:0; cursor:pointer; min-height:38px;}
+.rs-seg button[aria-pressed="true"]{background:var(--navy-800); color:#fff;}
+.rs-tp{display:grid; grid-template-columns:48px minmax(0,1fr) 48px; gap:8px;}
+.rs-arr{min-height:56px; border-radius:12px; border:2px solid var(--line); background:var(--white); color:var(--ink); font:800 22px 'Roboto Mono',monospace; cursor:pointer;}
+.rs-arr:disabled{opacity:.35; cursor:not-allowed;}
+.rs-cur{min-height:56px; min-width:0; border:2px solid var(--navy-800); background:var(--white); color:var(--ink); border-radius:12px; padding:6px 12px; display:flex; align-items:center; gap:10px; text-align:left; cursor:pointer; font-family:'Inter',sans-serif;}
+.rs-cur .no{font:800 24px/1 'Big Shoulders',sans-serif; color:var(--orange); flex:none;}
+.rs-cur .tx{flex:1; min-width:0; display:grid;}
+.rs-cur .nm{font:700 16px/1.2 'Inter',sans-serif; overflow-wrap:anywhere;}
+.rs-cur .sub{font-size:11.5px; color:var(--ink-dim);}
+.rs-cur .sub.ok, .rs-item .stt.ok{color:var(--good); font-weight:700;}
+.rs-cur svg{flex:none; color:var(--ink-dim); transition:transform .15s;}
+.rs-cur[aria-expanded="true"] svg{transform:rotate(180deg);}
+.rs-pick{border:2px solid var(--navy-800); border-radius:12px; background:var(--white); padding:8px; display:grid; gap:8px; margin-top:8px;}
+.rs-pick input{width:100%; min-height:44px; border:1.5px solid var(--line); border-radius:9px; padding:0 12px; font:500 15px 'Inter',sans-serif; background:var(--white); color:var(--ink);}
+.rs-plist{display:grid; gap:4px; max-height:300px; overflow-y:auto;}
+.rs-item{display:flex; align-items:center; gap:10px; min-height:48px; padding:6px 10px; border:0; border-radius:9px; background:transparent; color:var(--ink); cursor:pointer; text-align:left; font-family:'Inter',sans-serif; width:100%;}
+.rs-item:hover{background:var(--paper-dim);}
+.rs-item.on{background:var(--navy-800); color:#fff;}
+.rs-item .no{font:700 13px 'Roboto Mono',monospace; color:var(--ink-dim); width:22px; flex:none;}
+.rs-item.on .no{color:#C9D6E4;}
+.rs-item .nm{flex:1; min-width:0; font:600 15px/1.25 'Inter',sans-serif; overflow-wrap:anywhere;}
+.rs-item .stt{font-size:11.5px; color:var(--ink-dim); white-space:nowrap; font-weight:400;}
+.rs-item.on .stt{color:#C9D6E4;} .rs-item.on .stt.ok{color:#9be3b3;}
+.rs-nores{padding:10px; font-size:13px; color:var(--ink-dim);}
+.res-side h4{font:800 13px 'Big Shoulders',sans-serif; letter-spacing:.05em; text-transform:uppercase; margin:0 6px 8px; color:var(--ink-dim);}
+.res-side .rs-item .nm .stt{display:block;}
+.rs-stp{display:grid; grid-template-columns:44px minmax(0,1fr) 44px; gap:8px; align-items:center;}
+.rs-stp .rs-arr{min-height:44px; font-size:20px;}
+.rs-stp .mid{text-align:center;}
+.rs-stp h3{font:800 22px/1.05 'Big Shoulders',sans-serif; text-transform:uppercase; margin:0; color:var(--navy-800);}
+.rs-stp .st{font-size:12px; color:var(--ink-dim);}
+.rs-stp .st.ok{color:var(--good); font-weight:700;}
+.rs-strip{display:grid; grid-template-columns:repeat(var(--n,9),1fr); gap:4px; margin:8px 0 12px;}
+.rs-strip button{background:none; border:0; padding:6px 0 2px; cursor:pointer; display:grid; gap:3px; justify-items:center; color:var(--ink-dim); font:700 11px 'Roboto Mono',monospace;}
+.rs-strip i{display:block; width:100%; height:8px; border-radius:4px; background:var(--line);}
+.rs-strip .full i{background:var(--good);}
+.rs-strip .part i{background:var(--gold);}
+.rs-strip .on{color:var(--orange);}
+.rs-strip .on i{height:12px; box-shadow:0 0 0 2px var(--orange);}
+.rs-grid{display:grid; gap:10px;}
+.rs-comp{border:1.5px solid var(--line); border-radius:var(--radius); padding:10px 12px; display:grid; gap:8px; background:var(--white);}
+.rs-comp-h{display:flex; align-items:center; gap:8px;}
+.rs-comp-h b{flex:1; min-width:0; font-size:14.5px; overflow-wrap:anywhere;}
+.rs-comp-h .sum{font:600 11.5px 'Roboto Mono',monospace; color:var(--ink-dim); white-space:nowrap;}
+.rs-row{display:grid; grid-template-columns:44px 1fr; gap:8px; align-items:center;}
+.rs-row > label{font:700 11px 'Inter',sans-serif; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-dim);}
+.rs-pts{display:grid; grid-template-columns:repeat(4,1fr); gap:6px;}
+.rs-pts button{min-height:48px; border-radius:10px; border:2px solid var(--line); background:var(--white); color:var(--ink); font:800 22px 'Roboto Mono',monospace; cursor:pointer;}
+.rs-pts button.on{background:var(--navy-800); border-color:var(--navy-800); color:#fff;}
+.rs-pts button.on.three{background:var(--orange); border-color:var(--orange);}
+.rs-cm{display:grid; grid-template-columns:52px 1fr 52px; gap:6px;}
+.rs-cm button, .rs-cm input{min-height:48px; border-radius:10px; border:2px solid var(--line); background:var(--white); color:var(--ink); font:800 22px 'Roboto Mono',monospace;}
+.rs-cm button{cursor:pointer;}
+.rs-cm input{width:100%; min-width:0; text-align:center;}
+.rs-cm input:focus{outline:2px solid var(--navy-800); outline-offset:1px;}
+.rs-cm.locked button, .rs-cm.locked input{background:var(--paper-dim); color:var(--ink-dim); border-style:dashed; cursor:not-allowed;}
+.rs-note{font-size:11.5px; color:var(--ink-dim);}
+.rs-missing{font-size:12px; color:var(--ink-dim); margin-top:10px;}
+.rs-nav{position:sticky; bottom:0; display:none; grid-template-columns:1fr 1fr; gap:8px; padding:8px 0 calc(10px + env(safe-area-inset-bottom,0px)); background:var(--paper); border-top:1px solid var(--line); margin-top:10px; z-index:5;}
+.rs-nav.on{display:grid;}
+.rs-nav .btn{min-height:46px;}
+.rs-adv{margin-top:14px; border-top:1px solid var(--line); padding-top:10px;}
+.rs-adv summary{cursor:pointer; font-size:12.5px; font-weight:600; color:var(--ink-dim);}
+@media (min-width:600px){ .rs-grid{grid-template-columns:1fr 1fr;} }
+@media (max-width:999px){
+  #tab-rezultati .card{padding:14px;}
+  table.results-table{min-width:0;}
+  table.results-table th, table.results-table td{padding:3px 2px;}
+  table.results-table input[type=number]{width:40px;}
+  table.results-table td.competitor-name{min-width:110px; font-size:12.5px; padding:3px 6px; white-space:normal;}
+}
+@media (pointer:coarse){ table.results-table input[type=number]{height:40px; font-size:15px;} }
+/* Široki ekrani (tablet vodoravno, laptop): popis ekipa uvijek sa strane */
+@media (min-width:1000px){
+  #resSplit{display:grid; grid-template-columns:230px minmax(0,1fr); gap:18px; align-items:start;}
+  .res-side{display:block; position:sticky; top:16px; max-height:calc(100vh - 32px); overflow-y:auto; padding:12px 8px; margin-bottom:0;}
+  #teamPickerWrap{display:none;}
+  table.results-table{min-width:0;}
+  table.results-table th, table.results-table td{padding:3px 2px;}
+  table.results-table input[type=number]{width:44px;}
+  table.results-table td.competitor-name{min-width:120px; white-space:normal;}
+}
+@media (min-width:1300px){ table.results-table input[type=number]{width:52px;} table.results-table th, table.results-table td{padding:5px 4px;} }
+body.archive-mode #tab-rezultati button{pointer-events:none; opacity:.6;}
+
 /* ---------- Ranking table ---------- */
 table.rank-table{border-collapse:collapse; width:100%;}
 table.rank-table th, table.rank-table td{border:1px solid var(--line); padding:9px 10px; font-size:14px;}
@@ -624,21 +716,28 @@ body.archive-mode #tab-pravila textarea{
 
   <!-- ================= REZULTATI TAB ================= -->
   <div class="tab-content lockable" id="tab-rezultati">
-    <div class="card">
-      <h2><span class="ring-dot"></span>Unos rezultata po ekipi</h2>
-      <div class="hint">Dozvoljene vrijednosti — Punti: 0, 1, 2 ili 3. Centimetri: cijeli broj od 0 do 16. Ostale vrijednosti se automatski ispravljaju na najbliži dozvoljeni broj. Ako su punti 0, 1 ili 2, centimetri se automatski postavljaju na 16 (mjeri se samo kad je pogodak vrijedan 3 punta).</div>
-      <div class="row">
-        <div class="field grow">
-          <label>Odaberi ekipu</label>
-          <select id="teamSelectForResults"></select>
+    <div id="resSplit">
+      <aside class="card res-side" id="resSide" aria-label="Ekipe"></aside>
+      <div class="res-main">
+        <div class="card" id="resCard">
+          <h2><span class="ring-dot"></span>Unos rezultata po ekipi</h2>
+          <select id="teamSelectForResults" hidden aria-hidden="true" tabindex="-1"></select>
+          <div id="teamPickerWrap"></div>
+          <div class="rs-viewrow" id="resViewRow"></div>
+          <div id="seriesStepWrap"></div>
+          <div id="resultsGridWrap"></div>
+          <div class="autosave-note" id="autosaveNote"></div>
+          <details class="rs-adv">
+            <summary>Pomoć i napredne postavke</summary>
+            <div class="hint" style="margin-top:10px;">Dozvoljene vrijednosti — Punti: 0, 1, 2 ili 3. Centimetri: cijeli broj od 0 do 16. Ostale vrijednosti se automatski ispravljaju na najbliži dozvoljeni broj. Ako su punti 0, 1 ili 2, centimetri se automatski postavljaju na 16 (mjeri se samo kad je pogodak vrijedan 3 punta).</div>
+            <div class="field" style="max-width:340px;">
+              <label>Aktivna serija (prikaz na rang listi)</label>
+              <select id="activeSeriesSelect"></select>
+            </div>
+          </details>
         </div>
-        <div class="field">
-          <label>Aktivna serija (prikaz na rang listi)</label>
-          <select id="activeSeriesSelect"></select>
-        </div>
+        <div class="rs-nav no-print" id="resNav"></div>
       </div>
-      <div id="resultsGridWrap"></div>
-      <div class="autosave-note" id="autosaveNote"></div>
     </div>
   </div>
 
@@ -1726,19 +1825,240 @@ body.archive-mode #tab-pravila textarea{
     return { idx, n, label: jumpLabels(n)[idx], done: entered[idx], total, started, finished };
   }
 
+  // ---------------- Unos rezultata: biranje ekipe i serije, prikazi ----------------
+  const resUI = { team:null, ser:0, view:null, pick:false, q:'' };
+
+  function getResView(){
+    if(resUI.view) return resUI.view;
+    let v = null;
+    try{ v = localStorage.getItem('apk-res-view'); }catch(e){}
+    if(v !== 'series' && v !== 'all') v = window.matchMedia('(min-width:700px)').matches ? 'all' : 'series';
+    resUI.view = v;
+    return v;
+  }
+  function setResView(v){
+    resUI.view = v;
+    try{ localStorage.setItem('apk-res-view', v); }catch(e){}
+  }
+
+  function teamSeriesProgress(team){
+    const n = data.config.numJumps;
+    const real = team.competitors.filter(c=>!isMissing(c));
+    const filled = Array(n).fill(0);
+    real.forEach(c=>{
+      const arr = data.results[competitorId(team.number, c.letter)] || [];
+      for(let i=0;i<n;i++){
+        const r = arr[i];
+        if(r && r.points!=null && r.cm!=null) filled[i]++;
+      }
+    });
+    const need = real.length;
+    const full = filled.map(f=> need>0 && f>=need);
+    return { n, need, filled, full, doneCount: full.filter(Boolean).length };
+  }
+  function firstOpenSeries(team){
+    const p = teamSeriesProgress(team);
+    for(let i=0;i<p.n;i++) if(!p.full[i]) return i;
+    return p.n-1;
+  }
+  function teamStatus(team){
+    const p = teamSeriesProgress(team);
+    if(p.need===0) return { txt:'nema natjecatelja', ok:false };
+    return p.doneCount>=p.n ? { txt:'gotovo ✓', ok:true } : { txt:p.doneCount+'/'+p.n+' serija', ok:false };
+  }
+
+  function resTeamItems(q, curNumber){
+    const qq = (q||'').toLowerCase().trim();
+    const list = data.teams.filter(t=> !qq || (t.name||'').toLowerCase().indexOf(qq)>=0 || String(t.number)===qq);
+    if(!list.length) return '<div class="rs-nores">Nema ekipe za „'+escapeHtml(q)+'”.</div>';
+    return list.map(t=>{
+      const st = teamStatus(t);
+      return '<button class="rs-item'+(t.number===curNumber?' on':'')+'" data-res-team="'+t.number+'" type="button"><span class="no">'+t.number+'</span><span class="nm">'+escapeHtml(t.name)+'</span><span class="stt'+(st.ok?' ok':'')+'">'+st.txt+'</span></button>';
+    }).join('');
+  }
+
+  function renderResultsChrome(team){
+    const bar = document.getElementById('teamPickerWrap');
+    const side = document.getElementById('resSide');
+    const viewRow = document.getElementById('resViewRow');
+    const stepWrap = document.getElementById('seriesStepWrap');
+    const nav = document.getElementById('resNav');
+    if(!data.teams.length){
+      bar.innerHTML = ''; side.innerHTML = ''; viewRow.innerHTML = ''; stepWrap.innerHTML = ''; nav.className = 'rs-nav no-print'; nav.innerHTML = '';
+      return;
+    }
+    const cur = team ? team.number : null;
+    const idx = team ? data.teams.findIndex(t=>t.number===cur) : -1;
+    // traka za odabir ekipe (mobitel i tablet uspravno)
+    let h = '<div class="rs-tp"><button class="rs-arr" data-res-tn="-1" type="button" aria-label="Prethodna ekipa" '+(idx<=0?'disabled':'')+'>‹</button>';
+    if(team){
+      const st = teamStatus(team);
+      h += '<button class="rs-cur" id="resPickBtn" data-res-pick="1" type="button" aria-expanded="'+resUI.pick+'"><span class="no">'+team.number+'</span><span class="tx"><span class="nm">'+escapeHtml(team.name)+'</span><span class="sub'+(st.ok?' ok':'')+'">'+st.txt+' · dodirni za promjenu ekipe</span></span><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg></button>';
+    } else {
+      h += '<button class="rs-cur" id="resPickBtn" data-res-pick="1" type="button" aria-expanded="'+resUI.pick+'"><span class="tx"><span class="nm">Odaberi ekipu</span></span></button>';
+    }
+    h += '<button class="rs-arr" data-res-tn="1" type="button" aria-label="Sljedeća ekipa" '+(idx>=data.teams.length-1?'disabled':'')+'>›</button></div>';
+    if(resUI.pick) h += '<div class="rs-pick"><input id="resPickQ" type="search" placeholder="Traži ekipu po nazivu" value="'+escapeAttr(resUI.q)+'" aria-label="Traži ekipu"><div class="rs-plist" id="resPickList">'+resTeamItems(resUI.q, cur)+'</div></div>';
+    bar.innerHTML = h;
+    // bočni popis (široki ekrani)
+    side.innerHTML = '<h4>Ekipe</h4>'+data.teams.map(t=>{
+      const st = teamStatus(t);
+      return '<button class="rs-item'+(t.number===cur?' on':'')+'" data-res-team="'+t.number+'" type="button"><span class="no">'+t.number+'</span><span class="nm">'+escapeHtml(t.name)+'<span class="stt'+(st.ok?' ok':'')+'">'+st.txt+'</span></span></button>';
+    }).join('');
+
+    const view = getResView();
+    viewRow.innerHTML = '<span class="lbl">Prikaz</span><div class="rs-seg" role="group" aria-label="Prikaz unosa"><button data-res-view="series" aria-pressed="'+(view==='series')+'" type="button">Po seriji</button><button data-res-view="all" aria-pressed="'+(view==='all')+'" type="button">Sve serije</button></div>';
+
+    if(team && view==='series'){
+      const p = teamSeriesProgress(team);
+      const labels = jumpLabels(p.n);
+      const j = resUI.ser;
+      const f = p.filled[j];
+      const seg = labels.map((l,i)=>'<button class="'+(i===j?'on ':'')+(p.full[i]?'full':(p.filled[i]>0?'part':''))+'" data-res-ser="'+i+'" type="button" aria-label="Serija '+l+'"><i></i>'+l+'</button>').join('');
+      stepWrap.innerHTML = '<div class="rs-stp"><button class="rs-arr" data-res-sd="-1" type="button" aria-label="Prethodna serija" '+(j===0?'disabled':'')+'>‹</button>'+
+        '<div class="mid"><h3>Serija '+labels[j]+' od '+p.n+'</h3><span class="st'+(p.full[j]?' ok':'')+'">'+(p.full[j]?'sve upisano ✓':'upisano '+f+'/'+p.need)+'</span></div>'+
+        '<button class="rs-arr" data-res-sd="1" type="button" aria-label="Sljedeća serija" '+(j>=p.n-1?'disabled':'')+'>›</button></div>'+
+        '<div class="rs-strip" style="--n:'+p.n+'" aria-label="Napredak po serijama">'+seg+'</div>';
+      nav.className = 'rs-nav no-print on';
+      nav.innerHTML = '<button class="btn secondary" data-res-sd="-1" type="button" '+(j===0?'disabled':'')+'>‹ Prethodna serija</button><button class="btn" data-res-sd="1" type="button" '+(j>=p.n-1?'disabled':'')+'>Sljedeća serija ›</button>';
+    } else {
+      stepWrap.innerHTML = '';
+      nav.className = 'rs-nav no-print';
+      nav.innerHTML = '';
+    }
+  }
+
+  function storeResult(id, jump, field, val){
+    if(val !== null){
+      const lim = field==='points' ? {min:0,max:3} : {min:0,max:16};
+      val = Math.round(val);
+      val = isNaN(val) ? null : Math.max(lim.min, Math.min(lim.max, val));
+    }
+    if(!data.results[id]) data.results[id] = [];
+    if(!data.results[id][jump]) data.results[id][jump] = emptyResultRow();
+    const row = data.results[id][jump];
+    row[field] = val;
+    if(field === 'points'){
+      if(row.points===0 || row.points===1 || row.points===2){ row.cm = 16; row.cmAuto = true; }
+      else if(row.cmAuto){ row.cm = null; row.cmAuto = false; }
+    }
+    saveDataDebounced(700);
+    return row;
+  }
+
+  function renderSeriesCards(team, wrap){
+    const j = resUI.ser;
+    const real = team.competitors.filter(c=>!isMissing(c));
+    const missing = team.competitors.filter(c=>isMissing(c)).map(c=>c.letter);
+    if(!real.length){
+      wrap.innerHTML = '<div class="empty-state">Ova ekipa nema upisanih natjecatelja.</div>';
+      return;
+    }
+    wrap.innerHTML = '<div class="rs-grid">'+real.map(comp=>{
+      const id = competitorId(team.number, comp.letter);
+      const arr = data.results[id] || [];
+      const r = arr[j] || emptyResultRow();
+      let totalPts=0, totalCm=0;
+      arr.forEach(x=>{ if(x){ totalPts += (x.points||0); totalCm += (x.cm||0); } });
+      const locked = r.points==null || r.points<3;
+      const cmv = r.cmAuto ? 16 : (r.cm==null ? '' : r.cm);
+      const pb = [0,1,2,3].map(p=>'<button class="'+(r.points===p?'on'+(p===3?' three':''):'')+'" data-res-pts="'+p+'" data-id="'+id+'" type="button" aria-label="'+p+' boda">'+p+'</button>').join('');
+      const noteTxt = r.points==null ? 'Odaberi bodove.' : (locked ? 'Za '+r.points+' '+(r.points===1?'bod':'boda')+' cm je automatski 16.' : (r.cm==null ? 'Upiši cm (0–16).' : ''));
+      return '<article class="rs-comp"><div class="rs-comp-h"><span class="letter-badge">'+comp.letter+'</span><b>'+escapeHtml(comp.ime)+'</b><span class="sum" data-card-sum="'+id+'">'+totalPts+' pt · '+totalCm+' cm</span></div>'+
+        '<div class="rs-row"><label>Punti</label><div class="rs-pts">'+pb+'</div></div>'+
+        '<div class="rs-row"><label>Cm</label><div class="rs-cm'+(locked?' locked':'')+'"><button data-res-cmd="-1" data-id="'+id+'" type="button" '+(locked?'disabled':'')+' aria-label="Manje cm">−</button><input type="text" inputmode="numeric" data-res-cm="'+id+'" value="'+cmv+'" '+(locked?'disabled':'')+' aria-label="Centimetri, natjecatelj '+comp.letter+'"><button data-res-cmd="1" data-id="'+id+'" type="button" '+(locked?'disabled':'')+' aria-label="Više cm">+</button></div></div>'+
+        (noteTxt?'<span class="rs-note">'+noteTxt+'</span>':'')+'</article>';
+    }).join('')+'</div>'+
+    (missing.length ? '<div class="rs-missing">Prazna mjesta: '+missing.join(', ')+' (automatski 0 punata i 16 cm).</div>' : '');
+  }
+
+  function initResultsUI(){
+    const tab = document.getElementById('tab-rezultati');
+    const sel = document.getElementById('teamSelectForResults');
+    const currentTeam = ()=> data.teams.find(t=>t.number===parseInt(sel.value,10));
+    function selectTeam(number){ sel.value = String(number); renderResultsGrid(); }
+
+    tab.addEventListener('click', e=>{
+      const b = e.target.closest('button');
+      if(!b || !tab.contains(b)) return;
+      const d = b.dataset;
+      const team = currentTeam();
+      if(d.resPick){
+        resUI.pick = !resUI.pick; resUI.q = '';
+        renderResultsGrid();
+        const q = document.getElementById('resPickQ'); if(q) q.focus();
+        return;
+      }
+      if(d.resTeam){ resUI.pick = false; resUI.q = ''; selectTeam(parseInt(d.resTeam,10)); return; }
+      if(d.resTn){
+        const i = data.teams.findIndex(t=>team && t.number===team.number) + parseInt(d.resTn,10);
+        const t = data.teams[Math.max(0, Math.min(data.teams.length-1, i))];
+        if(t){ resUI.pick = false; selectTeam(t.number); }
+        return;
+      }
+      if(d.resView){ setResView(d.resView); renderResultsGrid(); return; }
+      if(d.resSer !== undefined){ resUI.ser = parseInt(d.resSer,10); renderResultsGrid(); return; }
+      if(d.resSd){
+        resUI.ser = Math.max(0, Math.min(data.config.numJumps-1, resUI.ser + parseInt(d.resSd,10)));
+        renderResultsGrid();
+        return;
+      }
+      if(d.resPts !== undefined && team){
+        storeResult(d.id, resUI.ser, 'points', parseInt(d.resPts,10));
+        renderResultsGrid();
+        return;
+      }
+      if(d.resCmd && team){
+        const row = (data.results[d.id] || [])[resUI.ser] || emptyResultRow();
+        const base = row.cm==null ? 0 : row.cm;
+        const next = row.cm==null ? (parseInt(d.resCmd,10) > 0 ? 1 : 0) : base + parseInt(d.resCmd,10);
+        storeResult(d.id, resUI.ser, 'cm', next);
+        renderResultsGrid();
+      }
+    });
+    tab.addEventListener('input', e=>{
+      if(e.target.id === 'resPickQ'){
+        resUI.q = e.target.value;
+        const team = currentTeam();
+        document.getElementById('resPickList').innerHTML = resTeamItems(resUI.q, team ? team.number : null);
+      }
+    });
+    tab.addEventListener('change', e=>{
+      const inp = e.target;
+      if(inp.dataset && inp.dataset.resCm){
+        const raw = inp.value.trim();
+        const v = raw === '' ? null : parseFloat(raw);
+        storeResult(inp.dataset.resCm, resUI.ser, 'cm', (v===null || isNaN(v)) ? null : v);
+        renderResultsGrid();
+      }
+    });
+  }
+
   function renderResultsGrid(){
     const sel = document.getElementById('teamSelectForResults');
     const wrap = document.getElementById('resultsGridWrap');
     const note = document.getElementById('autosaveNote');
+    if(!sel.value && data.teams.length){
+      const firstOpen = data.teams.find(t=>{ const p = teamSeriesProgress(t); return p.need>0 && p.doneCount < p.n; });
+      sel.value = String((firstOpen || data.teams[0]).number);
+    }
     const teamNumber = parseInt(sel.value, 10);
     const team = data.teams.find(t=>t.number===teamNumber);
+    if(team && resUI.team !== team.number){ resUI.team = team.number; resUI.ser = firstOpenSeries(team); }
+    resUI.ser = Math.max(0, Math.min(data.config.numJumps-1, resUI.ser));
+    renderResultsChrome(team);
     if(!team){
-      wrap.innerHTML = '<div class="empty-state">Odaberite ekipu za unos rezultata.</div>';
+      wrap.innerHTML = '<div class="empty-state">'+(data.teams.length ? 'Odaberite ekipu za unos rezultata.' : 'Još nema unesenih ekipa. Dodajte ih u kartici „Ekipe i postavke”.')+'</div>';
       note.textContent = '';
       return;
     }
     const n = data.config.numJumps;
     const labels = jumpLabels(n);
+    if(getResView() === 'series'){
+      renderSeriesCards(team, wrap);
+      note.textContent = 'Rezultati se automatski spremaju čim ih upišete.';
+      return;
+    }
 
     let html = '<div class="results-table-wrap"><table class="results-table"><thead><tr><th style="text-align:left;">Natjecatelj</th><th>&nbsp;</th>';
     labels.forEach(l=> html += '<th>'+l+'</th>');
@@ -1883,6 +2203,7 @@ body.archive-mode #tab-pravila textarea{
     arr.forEach(r=>{ totalPts += (r.points||0); totalCm += (r.cm||0); });
     const cell = document.querySelector('[data-sum-points="'+id+'"]');
     if(cell) cell.innerHTML = totalPts+' pt<br>'+totalCm+' cm';
+    try{ const t = data.teams.find(x=>x.number===resUI.team); if(t) renderResultsChrome(t); }catch(e){}
   }
 
   // ---------------- Ranking logic (Bara / Čoja / Alka rounds + Ukupno) ----------------
@@ -2413,6 +2734,7 @@ body.archive-mode #tab-pravila textarea{
     document.getElementById('settingsBody').addEventListener('input', updateSettingsSummary);
     updateSettingsSummary();
     document.getElementById('teamSelectForResults').addEventListener('change', renderResultsGrid);
+    initResultsUI();
     document.getElementById('activeSeriesSelect').addEventListener('change', e=>{
       data.config.activeSeries = parseInt(e.target.value, 10) || 0;
       saveDataDebounced(300);

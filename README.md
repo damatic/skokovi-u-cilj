@@ -11,6 +11,7 @@ Jedna HTML datoteka (`index.html`) za vođenje padobranskog natjecanja u precizn
 
 - Ekipe (5 natjecatelja A–E), država uz natjecatelja, spol (M/Ž).
 - Unos rezultata: bodovi 0–3 i cm 0–16. Za 0, 1 i 2 boda cm se automatski postavlja na 16.
+- Unos rezultata ima dva prikaza (prekidač "Prikaz", odabir se pamti na uređaju): **Po seriji** (velike tipke za bodove i cm, strelice i traka napretka po serijama; za mobitel) i **Sve serije** (tablica svih serija; za tablet i laptop). Ekipa se bira po nazivu (gumb s pretragom, strelice ‹ ›, a na širokim ekranima popis sa strane).
 - Poredak: bodovi (padajuće) → cm (rastuće) → countback.
 - Popisi: ekipe, pojedinačno, muškarci, žene, Bara, Čoja, Alka (po oznaci natjecatelja), ukupno.
 - Ispis, pravila natjecanja, informacije o događaju, arhiva izdanja.
