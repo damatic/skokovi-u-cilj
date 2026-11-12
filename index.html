@@ -110,6 +110,7 @@ h1,h2,h3,.display{
 }
 .field input:focus, .field select:focus{outline:2px solid var(--orange); outline-offset:1px; border-color:var(--orange);}
 .field.small{max-width:140px;}
+.field.small label{white-space:nowrap;}
 .field.grow{flex:1 1 220px;}
 
 #rulesTextarea{
@@ -323,7 +324,11 @@ body.locked #lockedCard{display:block;}
 .backup-row{display:flex; gap:10px; flex-wrap:wrap; margin:10px 0;}
 .hist-item{display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border:1px solid var(--line); border-radius:8px; margin-bottom:6px; font-size:13.5px;}
 body.spectator-mode #rangRoundRow + #rangStats{margin-top:0;}
-@media (max-width:519px){ .app-header{padding:14px 16px; gap:12px;} .app-header .target-logo svg{width:40px; height:40px;} }
+@media (max-width:519px){
+  .app-header{padding:14px 16px; gap:8px 12px; display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center;}
+  .app-header .target-logo svg{width:40px; height:40px;}
+  .app-header .sync-pill{grid-column:1 / -1; justify-self:start;}
+}
 @media (max-width:519px){ body.spectator-mode #tab-rang .hint:first-of-type{display:none;} }
 body.spectator-mode #rulesTextarea, body.spectator-mode #rulesAutosaveNote, body.spectator-mode #rulesAdminHint{display:none;}
 #rulesReadonly{display:none; white-space:pre-wrap; font-size:14.5px; line-height:1.6;}
@@ -454,7 +459,7 @@ body.archive-mode #tab-pravila textarea{
       </div>
       <div class="hint">Ovaj naziv i redni broj prikazuju se u zaglavlju aplikacije i na ispisima. Redni broj se svake godine mijenja.</div>
       <div class="row" style="margin-top:14px;">
-        <div class="field grow"><label>Mjesto održavanja</label><input type="text" id="eventLocationInput" placeholder="npr. Aerodrom Sinj (LDSS)"></div>
+        <div class="field grow"><label>Mjesto održavanja</label><input type="text" id="eventLocationInput" placeholder="npr. Aerodrom Sinj"></div>
         <div class="field grow"><label>Datum</label><input type="text" id="eventDateInput" placeholder="npr. 22.–23.8.2026."></div>
       </div>
       <div class="row">
@@ -462,13 +467,13 @@ body.archive-mode #tab-pravila textarea{
         <div class="field grow"><label>Glavni sudac</label><input type="text" id="eventJudgeInput" placeholder="ime i prezime"></div>
       </div>
       <div class="row">
-        <div class="field grow"><label>Kontakt</label><input type="text" id="eventContactInput" placeholder="npr. ime.prezime@primjer.hr · 091 000 0000"></div>
-        <div class="field grow"><label>Web stranica</label><input type="text" id="eventWebInput" placeholder="npr. https://www.aeroklubsinj.hr"></div>
+        <div class="field grow"><label>Kontakt</label><input type="text" id="eventContactInput" placeholder="npr. info@aeroklub.hr"></div>
+        <div class="field grow"><label>Web stranica</label><input type="text" id="eventWebInput" placeholder="npr. aeroklubsinj.hr"></div>
       </div>
       <div class="hint">Mjesto, datum, direktor natjecanja, glavni sudac, kontakt i web prikazuju se natjecateljima u javnom pregledu (tab "Informacije").</div>
       <div class="row" style="margin-top:14px;">
         <div class="field small">
-          <label>Broj serija skokova</label>
+          <label>Broj serija</label>
           <select id="numJumpsSelect">
             <option value="5">5 skokova</option>
             <option value="9">9 skokova</option>
